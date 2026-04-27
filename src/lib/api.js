@@ -400,3 +400,4 @@ export function getAdminConferenceChangeUrl(id) {
 export function getAdminConferenceDeleteUrl(id) {
   return `${requestBaseUrl}/admin/conferences/conference/${id}/delete/`;
 }
+export { apiRequest };

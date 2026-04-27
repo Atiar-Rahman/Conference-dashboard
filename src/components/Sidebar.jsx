@@ -9,13 +9,17 @@ import {
   Users,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-
+const conferenceId =  'f8fddccb-8763-4188-98b8-7203a1762a94';
 const items = [
   { label: "Overview", to: "/", icon: LayoutDashboard },
   { label: "Submissions", to: "/submissions", icon: FileText },
   { label: "Reviewers", to: "/reviewers", icon: ShieldCheck },
   { label: "Users", to: "/users", icon: Users },
-  { label: "Conference", to: "/conference", icon: CalendarRange },
+  {
+    label: "Conference",
+    to: `/conference/${conferenceId}`,
+    icon: CalendarRange,
+  },
 ];
 
 export default function Sidebar() {

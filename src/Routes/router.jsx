@@ -1,49 +1,64 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+
 import DashBoardLayout from "../layout/DashBoardLayout";
+import ConferenceLayout from "../layout/ConferenceLayout";
+
 import OverviewPage from "../pages/OverviewPage";
 import SubmissionsPage from "../pages/SubmissionsPage";
 import ReviewersPage from "../pages/ReviewersPage";
 import UsersPage from "../pages/UsersPage";
 import ConferencePage from "../pages/ConferencePage";
+
 import SignIn from "../pages/auth/SignIn";
-import SignUp from "../pages/auth/SignUp";
-import ConferenceLayout from "../layout/ConferenceLayout";
-import AboutEvents from "../components/aboutevents/AboutEvents";
 import NotFoundPage from "../pages/NotFoundPage";
 
+import AboutEvents from "../components/aboutevents/AboutEvents";
+import ArchiveLinks from "../components/aboutevents/ArchiveLinks";
+import Archives from "../components/aboutevents/Archives";
+import CommitteeGroups from "../components/aboutevents/CommitteeGroups";
+import CommitteeMembers from "../components/aboutevents/CommitteeMembers";
+import ContactInfos from "../components/aboutevents/ContactInfos";
 
 const router = createBrowserRouter([
     {
         path: "/login",
-        element: <SignIn/>
+        element: <SignIn />,
     },
     {
         path: "/",
-        element: <ProtectedRoute/>,
-        errorElement:<NotFoundPage/>,
+        element: <ProtectedRoute />,
+        errorElement: <NotFoundPage />,
         children: [
             {
-                element: <DashBoardLayout/>,
+                element: <DashBoardLayout />,
                 children: [
                     {
                         index: true,
-                        element: <OverviewPage/>
+                        element: <OverviewPage />,
                     },
                     {
                         path: "submissions",
-                        element: <SubmissionsPage/>
+                        element: <SubmissionsPage />,
                     },
                     {
                         path: "reviewers",
-                        element: <ReviewersPage/>,
+                        element: <ReviewersPage />,
                     },
                     {
                         path: "users",
-                        element: <UsersPage/>
+                        element: <UsersPage />,
                     },
+
+                    // list page
                     {
                         path: "conference",
+                        element: <ConferencePage />,
+                    },
+
+                    // single conference
+                    {
+                        path: "conference/:conferencePk",
                         element: <ConferenceLayout />,
                         children: [
                             {
@@ -59,38 +74,26 @@ const router = createBrowserRouter([
                                 path: "about-events",
                                 element: <AboutEvents />,
                             },
-                            // {
-                            //     path: "archive-links",
-                            //     element: <ArchiveLinks />,
-                            // },
-                            // {
-                            //     path: "archives",
-                            //     element: <Archives />,
-                            // },
-                            // {
-                            //     path: "committee-groups",
-                            //     element: <CommitteeGroups />,
-                            // },
-                            // {
-                            //     path: "committee-members",
-                            //     element: <CommitteeMembers />,
-                            // },
-                            // {
-                            //     path: "contact-infos",
-                            //     element: <ContactInfos />,
-                            // },
-                            // {
-                            //     path: "hero-highlights",
-                            //     element: <HeroHighlights />,
-                            // },
-                            // {
-                            //     path: "hero-info-cards",
-                            //     element: <HeroInfoCards />,
-                            // },
-                            // {
-                            //     path: "hero-sections",
-                            //     element: <HeroSections />,
-                            // },
+                            {
+                                path: "archive-links",
+                                element: <ArchiveLinks />,
+                            },
+                            {
+                                path: "archives",
+                                element: <Archives />,
+                            },
+                            {
+                                path: "committee-groups",
+                                element: <CommitteeGroups />,
+                            },
+                            {
+                                path: "committee-members",
+                                element: <CommitteeMembers />,
+                            },
+                            {
+                                path: "contact-infos",
+                                element: <ContactInfos />,
+                            },
                         ],
                     },
                 ],

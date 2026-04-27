@@ -16,8 +16,6 @@ const items = [
   { label: "Reviewers", to: "/reviewers", icon: ShieldCheck },
   { label: "Users", to: "/users", icon: Users },
   { label: "Conference", to: "/conference", icon: CalendarRange },
-  { label: "Notifications", to: "/notifications", icon: BellRing },
-  { label: "Payments", to: "/payments", icon: CreditCard },
 ];
 
 export default function Sidebar() {

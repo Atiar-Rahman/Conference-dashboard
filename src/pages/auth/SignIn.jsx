@@ -206,15 +206,6 @@ const SignIn = () => {
                                 <ArrowRight size={18} />
                             </button>
                         </form>
-                        <p className="mt-6 text-center text-sm text-slate-500">
-                            Already have an account?{" "}
-                            <Link
-                                to="/signup"
-                                className="font-semibold text-cyan hover:text-cyan/80 transition"
-                            >
-                                Sign in
-                            </Link>
-                        </p>
                         <p className="mt-6 text-xs leading-5 text-slate-400">
                             API endpoint:{" "}
                             <span className="font-medium text-slate-500">

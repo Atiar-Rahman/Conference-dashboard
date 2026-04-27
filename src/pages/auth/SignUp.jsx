@@ -9,65 +9,40 @@ import {
     EyeOff,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
 
 const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [form, setForm] = useState({
-        first_name: "",
-        last_name: "",
-        email: "",
-        password: "",
-        confirm_password: "",
-    });
+    const [showConfirmPassword, setShowConfirmPassword] =
+        useState(false);
 
-    const [error, setError] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const {
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors, isSubmitting },
+        setError,
+    } = useForm();
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
+    const password = watch("password");
 
-        setForm((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
-
-        // validation
-        if (form.password.length < 8) {
-            setError("Password must be at least 8 characters.");
-            return;
-        }
-
-        if (form.password !== form.confirm_password) {
-            setError("Password and confirm password do not match.");
-            return;
-        }
-
+    const onSubmit = async (data) => {
         try {
-            setIsSubmitting(true);
-
-            // request body (confirm_password যাবে না)
+            // confirm_password remove
             const payload = {
-                first_name: form.first_name,
-                last_name: form.last_name,
-                email: form.email,
-                password: form.password,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                email: data.email,
+                password: data.password,
             };
 
             console.log("API payload:", payload);
 
-            // example:
             // await registerUser(payload);
-
         } catch (err) {
-            setError(err.message || "Unable to create account.");
-        } finally {
-            setIsSubmitting(false);
+            setError("root", {
+                message: err.message || "Unable to create account.",
+            });
         }
     };
 
@@ -87,8 +62,8 @@ const SignUp = () => {
                         </h1>
 
                         <p className="mt-5 max-w-md text-sm leading-6 text-slate-300">
-                            Setup your admin profile for submissions, reviewers, schedules,
-                            notifications, and payments.
+                            Setup your admin profile for submissions, reviewers,
+                            schedules, notifications, and payments.
                         </p>
                     </div>
 
@@ -124,8 +99,11 @@ const SignUp = () => {
                             Register your admin account to continue.
                         </p>
 
-                        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-                            {/* First + Last Name */}
+                        <form
+                            onSubmit={handleSubmit(onSubmit)}
+                            className="mt-8 space-y-4"
+                        >
+                            {/* First + Last */}
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <label className="block">
                                     <span className="mb-2 block text-sm font-medium text-slate-700">
@@ -134,17 +112,20 @@ const SignUp = () => {
 
                                     <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                                         <User size={18} className="text-slate-400" />
-
                                         <input
-                                            type="text"
-                                            name="first_name"
-                                            value={form.first_name}
-                                            onChange={handleChange}
+                                            {...register("first_name", {
+                                                required: "First name is required",
+                                            })}
                                             placeholder="John"
-                                            required
                                             className="w-full border-none bg-transparent p-0 text-slate-900 outline-none"
                                         />
                                     </div>
+
+                                    {errors.first_name && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.first_name.message}
+                                        </p>
+                                    )}
                                 </label>
 
                                 <label className="block">
@@ -154,17 +135,20 @@ const SignUp = () => {
 
                                     <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                                         <User size={18} className="text-slate-400" />
-
                                         <input
-                                            type="text"
-                                            name="last_name"
-                                            value={form.last_name}
-                                            onChange={handleChange}
+                                            {...register("last_name", {
+                                                required: "Last name is required",
+                                            })}
                                             placeholder="Doe"
-                                            required
                                             className="w-full border-none bg-transparent p-0 text-slate-900 outline-none"
                                         />
                                     </div>
+
+                                    {errors.last_name && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.last_name.message}
+                                        </p>
+                                    )}
                                 </label>
                             </div>
 
@@ -176,17 +160,24 @@ const SignUp = () => {
 
                                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                                     <Mail size={18} className="text-slate-400" />
-
                                     <input
-                                        type="email"
-                                        name="email"
-                                        value={form.email}
-                                        onChange={handleChange}
+                                        {...register("email", {
+                                            required: "Email is required",
+                                            pattern: {
+                                                value: /^\S+@\S+$/i,
+                                                message: "Invalid email address",
+                                            },
+                                        })}
                                         placeholder="admin@email.com"
-                                        required
                                         className="w-full border-none bg-transparent p-0 text-slate-900 outline-none"
                                     />
                                 </div>
+
+                                {errors.email && (
+                                    <p className="mt-1 text-sm text-red-500">
+                                        {errors.email.message}
+                                    </p>
+                                )}
                             </label>
 
                             {/* Password */}
@@ -200,25 +191,41 @@ const SignUp = () => {
 
                                     <input
                                         type={showPassword ? "text" : "password"}
-                                        name="password"
-                                        value={form.password}
-                                        onChange={handleChange}
+                                        {...register("password", {
+                                            required: "Password is required",
+                                            minLength: {
+                                                value: 8,
+                                                message:
+                                                    "Password must be at least 8 characters",
+                                            },
+                                        })}
                                         placeholder="Enter password"
-                                        required
                                         className="w-full border-none bg-transparent p-0 text-slate-900 outline-none"
                                     />
 
                                     <button
                                         type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="text-slate-400 hover:text-slate-700 transition"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        className="text-slate-400 hover:text-slate-700"
                                     >
-                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        {showPassword ? (
+                                            <EyeOff size={18} />
+                                        ) : (
+                                            <Eye size={18} />
+                                        )}
                                     </button>
                                 </div>
+
+                                {errors.password && (
+                                    <p className="mt-1 text-sm text-red-500">
+                                        {errors.password.message}
+                                    </p>
+                                )}
                             </label>
 
-                            {/* Confirm Password */}
+                            {/* Confirm */}
                             <label className="block">
                                 <span className="mb-2 block text-sm font-medium text-slate-700">
                                     Confirm password
@@ -228,21 +235,27 @@ const SignUp = () => {
                                     <LockKeyhole size={18} className="text-slate-400" />
 
                                     <input
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        name="confirm_password"
-                                        value={form.confirm_password}
-                                        onChange={handleChange}
+                                        type={
+                                            showConfirmPassword ? "text" : "password"
+                                        }
+                                        {...register("confirm_password", {
+                                            required: "Confirm password is required",
+                                            validate: (value) =>
+                                                value === password ||
+                                                "Passwords do not match",
+                                        })}
                                         placeholder="Confirm password"
-                                        required
                                         className="w-full border-none bg-transparent p-0 text-slate-900 outline-none"
                                     />
 
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            setShowConfirmPassword(!showConfirmPassword)
+                                            setShowConfirmPassword(
+                                                !showConfirmPassword
+                                            )
                                         }
-                                        className="text-slate-400 hover:text-slate-700 transition"
+                                        className="text-slate-400 hover:text-slate-700"
                                     >
                                         {showConfirmPassword ? (
                                             <EyeOff size={18} />
@@ -251,28 +264,33 @@ const SignUp = () => {
                                         )}
                                     </button>
                                 </div>
+
+                                {errors.confirm_password && (
+                                    <p className="mt-1 text-sm text-red-500">
+                                        {errors.confirm_password.message}
+                                    </p>
+                                )}
                             </label>
 
-                            {/* Error */}
-                            {error && (
+                            {errors.root && (
                                 <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                                    <AlertCircle size={18} className="mt-0.5 shrink-0" />
-                                    <span>{error}</span>
+                                    <AlertCircle size={18} />
+                                    <span>{errors.root.message}</span>
                                 </div>
                             )}
 
-                            {/* Button */}
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
                                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:opacity-70"
                             >
-                                {isSubmitting ? "Creating account..." : "Create account"}
+                                {isSubmitting
+                                    ? "Creating account..."
+                                    : "Create account"}
                                 <ArrowRight size={18} />
                             </button>
                         </form>
 
-                        {/* Footer */}
                         <p className="mt-6 text-center text-sm text-slate-500">
                             Already have an account?{" "}
                             <Link

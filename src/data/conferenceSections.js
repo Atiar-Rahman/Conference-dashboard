@@ -1,0 +1,23 @@
+export const conferenceSections = [
+  { key: "about-events", label: "About events" },
+  { key: "archive-links", label: "Archive links" },
+  { key: "archives", label: "Archives" },
+  { key: "committee-groups", label: "Committee groups" },
+  { key: "committee-members", label: "Committee members" },
+  { key: "contact-infos", label: "Contact infos" },
+  { key: "hero-highlights", label: "Hero highlights" },
+  { key: "hero-info-cards", label: "Hero info cards" },
+  { key: "hero-sections", label: "Hero sections" },
+  { key: "important-dates", label: "Important dates" },
+  { key: "indexing-targets", label: "Indexing targets" },
+  { key: "keynote-speakers", label: "Keynote speakers" },
+  { key: "registration-fees", label: "Registration fees" },
+  { key: "scope-areas", label: "Scope areas" },
+  { key: "scope-info-cards", label: "Scope info cards" },
+  { key: "sponsors", label: "Sponsors" },
+  { key: "submission-configs", label: "Submission configs" },
+  { key: "theme-highlights", label: "Theme highlights" },
+  { key: "venue-infos", label: "Venue infos" },
+  { key: "welcome-sections", label: "Welcome sections" },
+];
+

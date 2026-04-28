@@ -9,10 +9,11 @@ import {
     Loader2,
     Phone,
     Mail,
-    Building2,
     User,
 } from "lucide-react";
+
 import { readStoredAuth } from "../../lib/authStorage";
+import { apiRequest } from "../../lib/api";
 
 const initialForm = {
     name: "",
@@ -24,55 +25,85 @@ const initialForm = {
     cta_label: "",
 };
 
-const ContactInfos = () => {
+export default function ContactInfos() {
     const { conferencePk } = useParams();
     const token = readStoredAuth()?.access;
 
     const [contact, setContact] = useState(null);
     const [editing, setEditing] = useState(false);
     const [showModal, setShowModal] = useState(false);
-
     const [loading, setLoading] = useState(true);
     const [submitLoading, setSubmitLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const endpoint = `/api/v1/conferences/${conferencePk}/contact-info/`;
-
-    const {
-        register,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm({
+    const { register, handleSubmit, reset } = useForm({
         defaultValues: initialForm,
     });
 
-    // GET
-    const loadContact = async () => {
-        if (!conferencePk || !token) return;
+    // ================= API =================
+    const getContactInfo = async () => {
+        return apiRequest(
+            `/api/v1/conferences/${conferencePk}/contact-info/`,
+            {
+                method: "GET",
+                token,
+                csrf: true,
+            }
+        );
+    };
 
+    const createContactInfo = async (payload) => {
+        return apiRequest(
+            `/api/v1/conferences/${conferencePk}/contact-info/`,
+            {
+                method: "POST",
+                token,
+                csrf: true,
+                body: JSON.stringify(payload),
+            }
+        );
+    };
+
+    const updateContactInfo = async (id, payload) => {
+        return apiRequest(
+            `/api/v1/conferences/${conferencePk}/contact-info/${id}/`,
+            {
+                method: "PATCH",
+                token,
+                csrf: true,
+                body: JSON.stringify(payload),
+            }
+        );
+    };
+
+    const deleteContactInfo = async (id) => {
+        return apiRequest(
+            `/api/v1/conferences/${conferencePk}/contact-info/${id}/`,
+            {
+                method: "DELETE",
+                token,
+                csrf: true,
+            }
+        );
+    };
+
+    // ================= LOAD =================
+    const loadContact = async () => {
         try {
             setLoading(true);
             setError("");
 
-            const res = await fetch(endpoint, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    Accept: "application/json",
-                },
-            });
+            const data = await getContactInfo();
 
-            // no contact yet
-            if (res.status === 404) {
-                setContact(null);
-                return;
-            }
+            const item = Array.isArray(data)
+                ? data[0]
+                : data?.results
+                    ? data.results[0]
+                    : data;
 
-            if (!res.ok) throw new Error("Failed to load contact");
-
-            const data = await res.json();
-            setContact(data);
+            setContact(item || null);
         } catch (err) {
+            setContact(null);
             setError(err.message);
         } finally {
             setLoading(false);
@@ -80,23 +111,22 @@ const ContactInfos = () => {
     };
 
     useEffect(() => {
-        loadContact();
-    }, [conferencePk, token]);
+        if (conferencePk) {
+            loadContact();
+        }
+    }, [conferencePk]);
 
-    // create modal
+    // ================= MODAL =================
     const openCreate = () => {
         setEditing(false);
         reset(initialForm);
         setShowModal(true);
-        setError("");
     };
 
-    // edit modal
     const openEdit = () => {
         if (!contact) return;
 
         setEditing(true);
-
         reset({
             name: contact.name || "",
             role: contact.role || "",
@@ -108,42 +138,24 @@ const ContactInfos = () => {
         });
 
         setShowModal(true);
-        setError("");
     };
 
     const closeModal = () => {
-        setEditing(false);
         setShowModal(false);
+        setEditing(false);
         reset(initialForm);
-        setError("");
     };
 
-    // CREATE / UPDATE
+    // ================= SUBMIT =================
     const onSubmit = async (formData) => {
         try {
             setSubmitLoading(true);
             setError("");
 
-            const url = editing ? `${endpoint}${contact.id}/` : endpoint;
-
-            const res = await fetch(url, {
-                method: editing ? "PATCH" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                    Accept: "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json().catch(() => null);
-
-            if (!res.ok) {
-                throw new Error(
-                    data?.detail ||
-                    Object.values(data || {}).flat().join(", ") ||
-                    "Save failed"
-                );
+            if (editing && contact?.id) {
+                await updateContactInfo(contact.id, formData);
+            } else {
+                await createContactInfo(formData);
             }
 
             closeModal();
@@ -155,39 +167,28 @@ const ContactInfos = () => {
         }
     };
 
-    // DELETE
+    // ================= DELETE =================
     const handleDelete = async () => {
         if (!contact) return;
-        if (!window.confirm("Delete this contact?")) return;
+        if (!window.confirm("Delete contact?")) return;
 
         try {
-            const res = await fetch(`${endpoint}${contact.id}/`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!res.ok) throw new Error("Delete failed");
-
+            await deleteContactInfo(contact.id);
             setContact(null);
         } catch (err) {
             setError(err.message);
         }
     };
 
-    if (!conferencePk) {
-        return (
-            <div className="rounded-3xl bg-white p-10 text-center shadow">
-                Conference ID missing
-            </div>
-        );
-    }
-
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Contact Info</h2>
+                <div>
+                    <h2 className="text-2xl font-semibold">Contact Information</h2>
+                    <p className="text-sm text-slate-500">
+                        Manage conference contact details
+                    </p>
+                </div>
 
                 {!contact && (
                     <button
@@ -200,72 +201,92 @@ const ContactInfos = () => {
                 )}
             </div>
 
-            {loading ? (
-                <div className="rounded-3xl bg-white p-10 text-center">
-                    <Loader2 className="mx-auto animate-spin" />
-                </div>
-            ) : !contact ? (
-                <div className="rounded-3xl bg-white p-10 text-center shadow">
-                    No contact found
-                </div>
-            ) : (
-                <div className="rounded-3xl bg-white p-6 shadow">
-                    <div className="flex justify-between">
-                        <div className="space-y-3">
-                            <p className="flex items-center gap-2 text-lg font-semibold">
-                                <User size={18} />
-                                {contact.name}
-                            </p>
-
-                            <p>
-                                {contact.role} • {contact.organization}
-                            </p>
-
-                            <p className="flex items-center gap-2">
-                                <Phone size={16} />
-                                {contact.phone || "-"}
-                            </p>
-
-                            <p>{contact.cell || "-"}</p>
-
-                            <p className="flex items-center gap-2">
-                                <Mail size={16} />
-                                {contact.email}
-                            </p>
-
-                            <p className="flex items-center gap-2">
-                                <Building2 size={16} />
-                                {contact.cta_label}
-                            </p>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button onClick={openEdit}>
-                                <Pencil size={18} />
-                            </button>
-
-                            <button onClick={handleDelete}>
-                                <Trash2 size={18} className="text-red-500" />
-                            </button>
-                        </div>
+            <div className="overflow-hidden rounded-3xl border bg-white shadow-sm">
+                {loading ? (
+                    <div className="flex justify-center gap-3 py-20">
+                        <Loader2 className="animate-spin" />
+                        Loading...
                     </div>
-                </div>
-            )}
+                ) : !contact ? (
+                    <div className="py-20 text-center text-slate-500">
+                        No contact information found
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead className="border-b bg-slate-50">
+                            <tr>
+                                <th className="px-6 py-4 text-left">Name</th>
+                                <th className="px-6 py-4 text-left">Role</th>
+                                <th className="px-6 py-4 text-left">Organization</th>
+                                <th className="px-6 py-4 text-left">Contact</th>
+                                <th className="px-6 py-4 text-left">CTA</th>
+                                <th className="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td className="px-6 py-5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="grid h-10 w-10 place-items-center rounded-full bg-slate-100">
+                                            <User size={16} />
+                                        </div>
+                                        {contact.name}
+                                    </div>
+                                </td>
+
+                                <td className="px-6 py-5">{contact.role}</td>
+                                <td className="px-6 py-5">{contact.organization}</td>
+
+                                <td className="px-6 py-5 text-sm">
+                                    <p className="flex items-center gap-2">
+                                        <Phone size={14} />
+                                        {contact.phone || "-"}
+                                    </p>
+                                    <p className="mt-1 flex items-center gap-2">
+                                        <Mail size={14} />
+                                        {contact.email}
+                                    </p>
+                                </td>
+
+                                <td className="px-6 py-5">{contact.cta_label}</td>
+
+                                <td className="px-6 py-5">
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            onClick={openEdit}
+                                            className="rounded-xl bg-slate-100 p-3"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+
+                                        <button
+                                            onClick={handleDelete}
+                                            className="rounded-xl bg-red-100 p-3 text-red-600"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                )}
+            </div>
 
             {error && (
-                <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500">
+                <div className="rounded-2xl bg-red-50 px-4 py-3 text-red-600">
                     {error}
-                </p>
+                </div>
             )}
 
             {showModal && (
-                <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-                    <div className="w-full max-w-3xl rounded-3xl bg-white p-6">
-                        <div className="mb-5 flex justify-between">
-                            <h3 className="text-xl font-semibold">
-                                {editing ? "Edit Contact" : "Create Contact"}
+                <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+                    <div className="w-full max-w-3xl rounded-3xl bg-white p-8">
+                        <div className="mb-6 flex justify-between">
+                            <h3 className="text-2xl font-semibold">
+                                {editing ? "Update Contact" : "Create Contact"}
                             </h3>
-
                             <button onClick={closeModal}>
                                 <X />
                             </button>
@@ -275,62 +296,17 @@ const ContactInfos = () => {
                             onSubmit={handleSubmit(onSubmit)}
                             className="grid gap-4 md:grid-cols-2"
                         >
-                            <input
-                                {...register("name", { required: "Name required" })}
-                                placeholder="Name"
-                                className="rounded-2xl border px-4 py-3"
-                            />
-
-                            <input
-                                {...register("role", { required: "Role required" })}
-                                placeholder="Role"
-                                className="rounded-2xl border px-4 py-3"
-                            />
-
-                            <input
-                                {...register("organization", {
-                                    required: "Organization required",
-                                })}
-                                placeholder="Organization"
-                                className="rounded-2xl border px-4 py-3"
-                            />
-
-                            <input
-                                {...register("phone")}
-                                placeholder="Phone"
-                                className="rounded-2xl border px-4 py-3"
-                            />
-
-                            <input
-                                {...register("cell")}
-                                placeholder="Cell"
-                                className="rounded-2xl border px-4 py-3"
-                            />
-
-                            <input
-                                type="email"
-                                {...register("email", { required: "Email required" })}
-                                placeholder="Email"
-                                className="rounded-2xl border px-4 py-3"
-                            />
-
-                            <input
-                                {...register("cta_label", {
-                                    required: "CTA Label required",
-                                })}
-                                placeholder="CTA Label"
-                                className="rounded-2xl border px-4 py-3 md:col-span-2"
-                            />
-
-                            {Object.values(errors).length > 0 && (
-                                <p className="text-sm text-red-500 md:col-span-2">
-                                    {Object.values(errors)[0]?.message}
-                                </p>
-                            )}
+                            <input {...register("name")} placeholder="Name" className="rounded-2xl border p-4" />
+                            <input {...register("role")} placeholder="Role" className="rounded-2xl border p-4" />
+                            <input {...register("organization")} placeholder="Organization" className="rounded-2xl border p-4" />
+                            <input {...register("phone")} placeholder="Phone" className="rounded-2xl border p-4" />
+                            <input {...register("cell")} placeholder="Cell" className="rounded-2xl border p-4" />
+                            <input {...register("email")} placeholder="Email" className="rounded-2xl border p-4" />
+                            <input {...register("cta_label")} placeholder="CTA Label" className="rounded-2xl border p-4 md:col-span-2" />
 
                             <button
                                 disabled={submitLoading}
-                                className="rounded-2xl bg-black py-3 text-white md:col-span-2"
+                                className="rounded-2xl bg-black py-4 text-white md:col-span-2"
                             >
                                 {submitLoading
                                     ? "Saving..."
@@ -344,6 +320,4 @@ const ContactInfos = () => {
             )}
         </div>
     );
-};
-
-export default ContactInfos;
+}

@@ -1,8 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { LoaderCircle, Pencil, Plus, Trash2, UserPlus, X } from "lucide-react";
+import {
+  LoaderCircle,
+  Pencil,
+  Plus,
+  Trash2,
+  UserPlus,
+  X,
+} from "lucide-react";
+
 import SectionCard from "../components/SectionCard";
 import StatusBadge from "../components/StatusBadge";
-import { createUser, deleteUser, getUsers, updateUser } from "../lib/api";
+import { readStoredAuth } from "../lib/authStorage";
+import {
+  createUser,
+  deleteUser,
+  getUsers,
+  updateUser,
+} from "../lib/api";
 
 const createInitialForm = {
   email: "",
@@ -16,7 +30,14 @@ const editInitialForm = {
   last_name: "",
 };
 
-function UserModal({ mode, form, onChange, onSubmit, onClose, isSubmitting }) {
+function UserModal({
+  mode,
+  form,
+  onChange,
+  onSubmit,
+  onClose,
+  isSubmitting,
+}) {
   const isCreate = mode === "create";
 
   return (
@@ -24,92 +45,114 @@ function UserModal({ mode, form, onChange, onSubmit, onClose, isSubmitting }) {
       <div className="w-full max-w-lg rounded-[28px] border border-white/70 bg-white p-6 shadow-panel">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-400">{isCreate ? "Create user" : "Update user"}</p>
+            <p className="text-sm uppercase tracking-[0.2em] text-slate-400">
+              {isCreate ? "Create user" : "Update user"}
+            </p>
+
             <h3 className="mt-2 text-2xl font-semibold text-slate-950">
-              {isCreate ? "Add a new dashboard user" : "Edit user profile"}
+              {isCreate
+                ? "Add a new dashboard user"
+                : "Edit user profile"}
             </h3>
           </div>
+
           <button
             type="button"
             onClick={onClose}
             className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600"
-            aria-label="Close"
           >
             <X size={18} />
           </button>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          {isCreate ? (
+          {isCreate && (
             <>
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </span>
                 <input
                   type="email"
                   name="email"
                   value={form.email}
                   onChange={onChange}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400"
-                  placeholder="user@example.com"
                   required
+                  placeholder="user@example.com"
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">Password</span>
+                <span className="mb-2 block text-sm font-medium text-slate-700">
+                  Password
+                </span>
                 <input
                   type="password"
                   name="password"
                   value={form.password}
                   onChange={onChange}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400"
-                  placeholder="Enter password"
                   required
+                  placeholder="Enter password"
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none"
                 />
               </label>
             </>
-          ) : null}
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">First name</span>
+              <span className="mb-2 block text-sm font-medium text-slate-700">
+                First name
+              </span>
               <input
                 type="text"
                 name="first_name"
                 value={form.first_name}
                 onChange={onChange}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400"
                 placeholder="First name"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none"
               />
             </label>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-700">Last name</span>
+              <span className="mb-2 block text-sm font-medium text-slate-700">
+                Last name
+              </span>
               <input
                 type="text"
                 name="last_name"
                 value={form.last_name}
                 onChange={onChange}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-400"
                 placeholder="Last name"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none"
               />
             </label>
           </div>
 
-          <div className="flex flex-wrap justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+              disabled={isSubmitting}
+              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold"
             >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
             >
-              {isSubmitting ? <LoaderCircle size={16} className="animate-spin" /> : isCreate ? <UserPlus size={16} /> : <Pencil size={16} />}
+              {isSubmitting ? (
+                <LoaderCircle size={16} className="animate-spin" />
+              ) : isCreate ? (
+                <UserPlus size={16} />
+              ) : (
+                <Pencil size={16} />
+              )}
+
               {isCreate ? "Create user" : "Save changes"}
             </button>
           </div>
@@ -119,7 +162,11 @@ function UserModal({ mode, form, onChange, onSubmit, onClose, isSubmitting }) {
   );
 }
 
-export default function UsersPage({ auth }) {
+export default function UsersPage() {
+  const storedAuth = readStoredAuth();
+  const token = storedAuth?.access;
+  const currentUserId = storedAuth?.user?.id;
+
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -127,38 +174,45 @@ export default function UsersPage({ auth }) {
     next: null,
     previous: null,
   });
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+
   const [createForm, setCreateForm] = useState(createInitialForm);
   const [editForm, setEditForm] = useState(editInitialForm);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const token = auth?.access;
-  const currentUserId = auth?.user?.id;
 
-  const sortedUsers = useMemo(
-    () =>
-      [...users].sort((left, right) => {
-        const leftName = `${left.first_name || ""} ${left.last_name || ""}`.trim() || left.email || "";
-        const rightName = `${right.first_name || ""} ${right.last_name || ""}`.trim() || right.email || "";
-        return leftName.localeCompare(rightName);
-      }),
-    [users],
-  );
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      const aName =
+        `${a.first_name || ""} ${a.last_name || ""}`.trim() ||
+        a.email ||
+        "";
+      const bName =
+        `${b.first_name || ""} ${b.last_name || ""}`.trim() ||
+        b.email ||
+        "";
 
-  const loadUsers = async (targetPage = page) => {
+      return aName.localeCompare(bName);
+    });
+  }, [users]);
+
+  const loadUsers = async (targetPage = 1) => {
     if (!token) {
-      setError("Authentication token is missing.");
+      setError("Authentication token missing");
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    setError("");
-
     try {
+      setIsLoading(true);
+      setError("");
+
       const data = await getUsers(token, targetPage);
       const nextUsers = Array.isArray(data) ? data : data?.results || [];
 
@@ -169,44 +223,49 @@ export default function UsersPage({ auth }) {
         previous: data?.previous || null,
       });
       setPage(targetPage);
-    } catch (loadError) {
-      setError(
-        loadError.message ||
-          "Could not load users. If your backend does not expose GET /auth/users/ for admins, we will need the correct list endpoint.",
-      );
+    } catch (err) {
+      setError(err.message || "Failed to load users");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadUsers(page);
+    loadUsers(1);
   }, [token]);
 
-  const handleCreateChange = (event) => {
-    const { name, value } = event.target;
-    setCreateForm((current) => ({ ...current, [name]: value }));
+  const handleCreateChange = (e) => {
+    const { name, value } = e.target;
+    setCreateForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleEditChange = (event) => {
-    const { name, value } = event.target;
-    setEditForm((current) => ({ ...current, [name]: value }));
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleCreateSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-    setSuccess("");
-    setIsSubmitting(true);
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
 
     try {
-      const createdUser = await createUser(createForm, token);
-      setUsers((current) => [createdUser, ...current]);
+      setIsSubmitting(true);
+      setError("");
+      setSuccess("");
+
+      const created = await createUser(createForm, token);
+
+      setUsers((prev) => [created, ...prev]);
       setCreateForm(createInitialForm);
       setShowCreateModal(false);
-      setSuccess("User created successfully.");
-    } catch (submitError) {
-      setError(submitError.message || "Unable to create user.");
+      setSuccess("User created successfully");
+    } catch (err) {
+      setError(err.message || "Failed to create user");
     } finally {
       setIsSubmitting(false);
     }
@@ -218,22 +277,18 @@ export default function UsersPage({ auth }) {
       first_name: user.first_name || "",
       last_name: user.last_name || "",
     });
-    setSuccess("");
     setError("");
+    setSuccess("");
   };
 
-  const handleEditSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!editingUser) {
-      return;
-    }
-
-    setError("");
-    setSuccess("");
-    setIsSubmitting(true);
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
 
     try {
+      setIsSubmitting(true);
+      setError("");
+      setSuccess("");
+
       const updated = await updateUser({
         id: editingUser.id,
         payload: editForm,
@@ -241,39 +296,32 @@ export default function UsersPage({ auth }) {
         isCurrentUser: editingUser.id === currentUserId,
       });
 
-      setUsers((current) => current.map((user) => (user.id === editingUser.id ? updated : user)));
-      setEditingUser(null);
-      setEditForm(editInitialForm);
-      setSuccess("User updated successfully.");
-    } catch (submitError) {
-      setError(
-        submitError.message ||
-          "Unable to update user. If your API only allows /auth/users/me/, please share the admin update endpoint for other users.",
+      setUsers((prev) =>
+        prev.map((u) => (u.id === editingUser.id ? updated : u))
       );
+
+      setEditingUser(null);
+      setSuccess("User updated successfully");
+    } catch (err) {
+      setError(err.message || "Failed to update user");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (user) => {
-    const confirmed = window.confirm(`Delete ${user.email}?`);
-
-    if (!confirmed) {
-      return;
-    }
-
-    setError("");
-    setSuccess("");
+    if (!window.confirm(`Delete ${user.email}?`)) return;
 
     try {
+      setError("");
+      setSuccess("");
+
       await deleteUser(user.id, token);
-      setUsers((current) => current.filter((item) => item.id !== user.id));
-      setSuccess("User deleted successfully.");
-    } catch (deleteError) {
-      setError(
-        deleteError.message ||
-          "Unable to delete user. Please share the exact delete endpoint if it differs from /auth/users/{id}/.",
-      );
+
+      setUsers((prev) => prev.filter((u) => u.id !== user.id));
+      setSuccess("User deleted successfully");
+    } catch (err) {
+      setError(err.message || "Failed to delete user");
     }
   };
 
@@ -282,12 +330,11 @@ export default function UsersPage({ auth }) {
       title="User management"
       action={
         <button
-          type="button"
           onClick={() => {
             setCreateForm(createInitialForm);
             setShowCreateModal(true);
-            setSuccess("");
             setError("");
+            setSuccess("");
           }}
           className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
         >
@@ -297,18 +344,22 @@ export default function UsersPage({ auth }) {
       }
     >
       <div className="overflow-x-auto">
-        {error ? (
-          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
-        ) : null}
+        {error && (
+          <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
 
-        {success ? (
-          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>
-        ) : null}
+        {success && (
+          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {success}
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center gap-3 py-16 text-sm text-slate-500">
             <LoaderCircle size={18} className="animate-spin" />
-            Loading users
+            Loading users...
           </div>
         ) : (
           <>
@@ -321,33 +372,48 @@ export default function UsersPage({ auth }) {
                   <th className="pb-3 font-medium">Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {sortedUsers.map((user) => {
-                  const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Unnamed user";
+                  const fullName =
+                    `${user.first_name || ""} ${user.last_name || ""}`.trim() ||
+                    "Unnamed user";
+
                   const isCurrentUser = user.id === currentUserId;
 
                   return (
-                    <tr key={user.id || user.email} className="border-t border-slate-100">
+                    <tr
+                      key={user.id || user.email}
+                      className="border-t border-slate-100"
+                    >
                       <td className="py-4">
-                        <p className="font-semibold text-slate-900">{fullName}</p>
+                        <p className="font-semibold text-slate-900">
+                          {fullName}
+                        </p>
                         <p className="text-slate-500">{user.email}</p>
                       </td>
-                      <td className="py-4 text-slate-700">{user.role || "User"}</td>
-                      <td className="py-4">
-                        <StatusBadge value={user.is_staff ? "Active" : "Blocked"} />
+
+                      <td className="py-4 text-slate-700">
+                        {user.role || "User"}
                       </td>
+
+                      <td className="py-4">
+                        <StatusBadge
+                          value={user.is_staff ? "Active" : "Blocked"}
+                        />
+                      </td>
+
                       <td className="py-4">
                         <div className="flex flex-wrap gap-2">
                           <button
-                            type="button"
                             onClick={() => openEditModal(user)}
                             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
                           >
                             <Pencil size={14} />
                             Edit
                           </button>
+
                           <button
-                            type="button"
                             onClick={() => handleDelete(user)}
                             className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700"
                           >
@@ -366,20 +432,20 @@ export default function UsersPage({ auth }) {
               <p>
                 Page {page} • {users.length} users loaded • {pagination.count} total users
               </p>
+
               <div className="flex gap-3">
                 <button
-                  type="button"
                   onClick={() => loadUsers(page - 1)}
-                  disabled={!pagination.previous || isLoading}
-                  className="rounded-full border border-slate-200 px-4 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={!pagination.previous}
+                  className="rounded-full border border-slate-200 px-4 py-2 font-semibold disabled:opacity-50"
                 >
                   Previous
                 </button>
+
                 <button
-                  type="button"
                   onClick={() => loadUsers(page + 1)}
-                  disabled={!pagination.next || isLoading}
-                  className="rounded-full border border-slate-200 px-4 py-2 font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={!pagination.next}
+                  className="rounded-full border border-slate-200 px-4 py-2 font-semibold disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -389,35 +455,27 @@ export default function UsersPage({ auth }) {
         )}
       </div>
 
-      {showCreateModal ? (
+      {showCreateModal && (
         <UserModal
           mode="create"
           form={createForm}
           onChange={handleCreateChange}
           onSubmit={handleCreateSubmit}
-          onClose={() => {
-            if (!isSubmitting) {
-              setShowCreateModal(false);
-            }
-          }}
+          onClose={() => !isSubmitting && setShowCreateModal(false)}
           isSubmitting={isSubmitting}
         />
-      ) : null}
+      )}
 
-      {editingUser ? (
+      {editingUser && (
         <UserModal
           mode="edit"
           form={editForm}
           onChange={handleEditChange}
           onSubmit={handleEditSubmit}
-          onClose={() => {
-            if (!isSubmitting) {
-              setEditingUser(null);
-            }
-          }}
+          onClose={() => !isSubmitting && setEditingUser(null)}
           isSubmitting={isSubmitting}
         />
-      ) : null}
+      )}
     </SectionCard>
   );
 }

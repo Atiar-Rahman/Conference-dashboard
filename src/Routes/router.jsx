@@ -3,6 +3,7 @@ import ProtectedRoute from "./ProtectedRoute";
 
 import DashBoardLayout from "../layout/DashBoardLayout";
 import ConferenceLayout from "../layout/ConferenceLayout";
+import HeroLayout from "../layout/HeroLayout";
 
 import OverviewPage from "../pages/OverviewPage";
 import SubmissionsPage from "../pages/SubmissionsPage";
@@ -19,12 +20,25 @@ import Archives from "../components/aboutevents/Archives";
 import CommitteeGroups from "../components/aboutevents/CommitteeGroups";
 import CommitteeMembers from "../components/aboutevents/CommitteeMembers";
 import ConferenceContact from "../components/aboutevents/ConferenceContact";
+
 import Hero from "../pages/conference/Hero";
+import HeroInfo from "../components/hero/HeroInfo";
+import HeroImage from "../components/hero/HeroImage";
+
 import ImportantDates from "../pages/conference/ImportantDates";
 import KeyNote from "../pages/conference/KeyNote";
 import Register from "../pages/conference/Register";
 import Welcome from "../pages/conference/Welcome";
 import Track from "../pages/conference/Track";
+import ConferenceCommiteeLayout from "../layout/ConferenceCommiteeLayout";
+import ArchivesLayout from "../layout/ArchivesLayout";
+import HeroHighlights from "../components/aboutevents/HeroHighlights";
+import IndexingTarget from "../components/aboutevents/IndexingTarget";
+import Sponsor from "../components/aboutevents/Sponsor";
+import VenueItem from "../components/aboutevents/VenueItem";
+import AboutEventLayout from "../layout/AboutEventLayout";
+import TrackLayout from "../layout/TrackLayout";
+import Paper from "../pages/papers/Paper";
 
 const router = createBrowserRouter([
     {
@@ -55,75 +69,157 @@ const router = createBrowserRouter([
                         path: "users",
                         element: <UsersPage />,
                     },
-
-                    // list page
                     {
                         path: "conference",
                         element: <ConferencePage />,
                     },
 
-                    // single conference
+                    // conference details
                     {
                         path: "conference/:conferencePk",
                         element: <ConferenceLayout />,
                         children: [
                             {
                                 index: true,
-                                element: (
-                                    <Navigate
-                                        to="about-events"
-                                        replace
-                                    />
-                                ),
+                                element: <Navigate to="about-events" replace />,
                             },
+                            // ABOUT EVENT
                             {
                                 path: "about-events",
-                                element: <AboutEvents />,
+                                element: <AboutEventLayout/>,
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <AboutEvents />,
+                                    },
+                                    {
+                                        path: ":eventPk",
+                                        children: [
+                                            {
+                                                path: "herohighlights",
+                                                element: <HeroHighlights/>,
+                                            },
+                                            {
+                                                path: "indexing-target",
+                                                element: <IndexingTarget/>
+                                            },
+                                            {
+                                                path: "sponsor",
+                                                element: <Sponsor/>,
+                                            },
+                                            {
+                                                path: "venue-item",
+                                                element: <VenueItem/>,
+                                            },
+                                        ],
+                                    },
+                                ],
                             },
-                            {
-                                path: "archive-links",
-                                element: <ArchiveLinks />,
-                            },
+                            // archives 
                             {
                                 path: "archives",
-                                element: <Archives />,
+                                element: <ArchivesLayout/>,
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <Archives />,
+                                    },
+                                    {
+                                        path: ":archivePk",
+                                        children: [
+                                            {
+                                                path: "archive-links",
+                                                element: <ArchiveLinks />,
+                                            },
+                                        ],
+                                    },
+                                ],
                             },
+                            // COMMITTEE
                             {
                                 path: "committee-groups",
-                                element: <CommitteeGroups />,
-                            },
-                            {
-                                path: "committee-members",
-                                element: <CommitteeMembers />,
+                                element: <ConferenceCommiteeLayout/>,
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <CommitteeGroups />,
+                                    },
+                                    {
+                                        path: ":groupPk",
+                                        children: [
+                                            {
+                                                path: "group-member",
+                                                element: <CommitteeMembers />,
+                                            },
+                                        ],
+                                    },
+                                ],
                             },
                             {
                                 path: "contact-infos",
-                                element: <ConferenceContact/>,
+                                element: <ConferenceContact />,
+                            },
+                            // HERO
+                            {
+                                path: "hero",
+                                element: <HeroLayout />,
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <Hero />,
+                                    },
+                                    {
+                                        path: ":heroPk",
+                                        children: [
+                                            {
+                                                path: "hero-info",
+                                                element: <HeroInfo />,
+                                            },
+                                            {
+                                                path: "hero-image",
+                                                element: <HeroImage />,
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+
+                            {
+                                path: "importants-date",
+                                element: <ImportantDates />,
                             },
                             {
-                                path:'hero',
-                                element:<Hero/>
+                                path: "keynote",
+                                element: <KeyNote />,
                             },
                             {
-                                path:'importants-date',
-                                element:<ImportantDates/>
+                                path: "register",
+                                element: <Register />,
                             },
                             {
-                                path:'keynote',
-                                element:<KeyNote/>
+                                path: "welcome",
+                                element: <Welcome />,
                             },
+                            // TRACK
                             {
-                                path:'register',
-                                element:<Register/>
+                                path: "track",
+                                element: <TrackLayout/>,
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <Track />,
+                                    },
+                                    {
+                                        path: ":trackPk",
+                                        children: [
+                                            {
+                                                path: "papers",
+                                                element: <Paper/>,
+                                            },
+                                        ],
+                                    },
+                                ],
                             },
-                            {
-                                path:'welcome',
-                                element:<Welcome/>
-                            },
-                            {
-                                path:'track',
-                                element:<Track/>
-                            }
                         ],
                     },
                 ],

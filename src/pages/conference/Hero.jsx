@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
     Plus,
     Pencil,
@@ -8,10 +8,9 @@ import {
     X,
     Save,
     Loader2,
-    FileText,
-    Calendar,
-    Link as LinkIcon,
-    Type,
+    Image,
+    Info,
+    CheckCircle2,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -32,6 +31,7 @@ const initialForm = {
 
 const Hero = () => {
     const { conferencePk } = useParams();
+    const navigate = useNavigate();
     const token = readStoredAuth()?.access;
 
     const [heroes, setHeroes] = useState([]);
@@ -41,59 +41,39 @@ const Hero = () => {
     const [submitLoading, setSubmitLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const {
-        register,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm({
+    const { register, handleSubmit, reset } = useForm({
         defaultValues: initialForm,
     });
 
     // ================= API =================
-    const getHeroes = async () => {
-        return apiRequest(`/api/v1/conferences/${conferencePk}/hero/`, {
+    const endpoint = `/api/v1/conferences/${conferencePk}/hero/`;
+
+    const getHeroes = () =>
+        apiRequest(endpoint, {
             method: "GET",
             token,
             csrf: true,
         });
-    };
 
-    const createHero = async (payload) => {
-        return apiRequest(`/api/v1/conferences/${conferencePk}/hero/`, {
+    const createHero = (payload) =>
+        apiRequest(endpoint, {
             method: "POST",
             token,
             csrf: true,
             body: JSON.stringify(payload),
         });
-    };
 
     const updateHero = async (id, payload) => {
-        const path = `/api/v1/conferences/${conferencePk}/hero/${id}/`;
-
-        const changedPayload = {};
-
-        if (editing) {
-            Object.keys(payload).forEach((key) => {
-                if ((payload[key] || "") !== (editing[key] || "")) {
-                    changedPayload[key] = payload[key];
-                }
-            });
-        }
-
-        const finalPayload =
-            Object.keys(changedPayload).length > 0 ? changedPayload : payload;
+        const path = `${endpoint}${id}/`;
 
         try {
             return await apiRequest(path, {
                 method: "PATCH",
                 token,
                 csrf: true,
-                body: JSON.stringify(finalPayload),
+                body: JSON.stringify(payload),
             });
-        } catch (err) {
-            if (err?.status !== 405) throw err;
-
+        } catch {
             return apiRequest(path, {
                 method: "PUT",
                 token,
@@ -103,23 +83,21 @@ const Hero = () => {
         }
     };
 
-    const deleteHero = async (id) => {
-        return apiRequest(`/api/v1/conferences/${conferencePk}/hero/${id}/`, {
+    const deleteHero = (id) =>
+        apiRequest(`${endpoint}${id}/`, {
             method: "DELETE",
             token,
             csrf: true,
         });
-    };
 
     // ================= LOAD =================
     const loadHeroes = async () => {
         try {
             setLoading(true);
-            setError("");
 
             const data = await getHeroes();
 
-            const items = Array.isArray(data)
+            const parsed = Array.isArray(data)
                 ? data
                 : data?.results
                     ? data.results
@@ -127,22 +105,33 @@ const Hero = () => {
                         ? [data]
                         : [];
 
-            setHeroes(items);
+            setHeroes(parsed);
         } catch (err) {
+            setError(err.message);
             setHeroes([]);
-            setError(err.message || "Failed to load hero");
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (conferencePk) {
-            loadHeroes();
-        }
+        if (conferencePk) loadHeroes();
     }, [conferencePk]);
 
-    // ================= MODAL =================
+    // ================= NAVIGATION =================
+    const openHero = (heroId) => {
+        navigate(`/conference/${conferencePk}/hero/${heroId}/hero-info`);
+    };
+
+    const openHeroInfo = (heroId) => {
+        navigate(`/conference/${conferencePk}/hero/${heroId}/hero-info`);
+    };
+
+    const openHeroImage = (heroId) => {
+        navigate(`/conference/${conferencePk}/hero/${heroId}/hero-image`);
+    };
+
+    // ================= FORM =================
     const openCreate = () => {
         setEditing(null);
         reset(initialForm);
@@ -151,17 +140,7 @@ const Hero = () => {
 
     const openEdit = (item) => {
         setEditing(item);
-        reset({
-            eyebrow: item.eyebrow || "",
-            pretitle: item.pretitle || "",
-            title: item.title || "",
-            date_line: item.date_line || "",
-            summary: item.summary || "",
-            cta_primary_label: item.cta_primary_label || "",
-            cta_primary_link: item.cta_primary_link || "",
-            cta_secondary_label: item.cta_secondary_label || "",
-            cta_secondary_link: item.cta_secondary_link || "",
-        });
+        reset(item);
         setShowModal(true);
     };
 
@@ -171,179 +150,132 @@ const Hero = () => {
         setShowModal(false);
     };
 
-    // ================= SUBMIT =================
-    const onSubmit = async (formData) => {
+    const onSubmit = async (data) => {
         try {
             setSubmitLoading(true);
-            setError("");
 
-            const id = editing?.id || editing?.pk;
-
-            if (id) {
-                await updateHero(id, formData);
-
-                Swal.fire({
-                    icon: "success",
-                    title: "Updated!",
-                    text: "Hero updated successfully",
-                    timer: 1800,
-                    showConfirmButton: false,
-                });
+            if (editing?.id) {
+                await updateHero(editing.id, data);
             } else {
-                await createHero(formData);
-
-                Swal.fire({
-                    icon: "success",
-                    title: "Created!",
-                    text: "Hero created successfully",
-                    timer: 1800,
-                    showConfirmButton: false,
-                });
+                await createHero(data);
             }
 
             closeModal();
-            await loadHeroes();
-        } catch (err) {
-            setError(err.message || "Something went wrong");
+            loadHeroes();
 
-            Swal.fire({
-                icon: "error",
-                title: "Failed",
-                text: err.message || "Something went wrong",
-            });
+            Swal.fire("Success", "Saved successfully", "success");
+        } catch (err) {
+            Swal.fire("Error", err.message, "error");
         } finally {
             setSubmitLoading(false);
         }
     };
 
-    // ================= DELETE =================
     const handleDelete = async (id) => {
-        const result = await Swal.fire({
+        const ok = await Swal.fire({
             title: "Delete Hero?",
-            text: "You won't be able to revert this",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#dc2626",
-            cancelButtonColor: "#64748b",
             confirmButtonText: "Delete",
         });
 
-        if (!result.isConfirmed) return;
+        if (!ok.isConfirmed) return;
 
-        try {
-            await deleteHero(id);
-            await loadHeroes();
-
-            Swal.fire({
-                icon: "success",
-                title: "Deleted!",
-                text: "Hero deleted successfully",
-                timer: 1800,
-                showConfirmButton: false,
-            });
-        } catch (err) {
-            setError(err.message);
-
-            Swal.fire({
-                icon: "error",
-                title: "Delete failed",
-                text: err.message,
-            });
-        }
+        await deleteHero(id);
+        loadHeroes();
     };
 
     return (
         <div className="space-y-6">
-            {/* header */}
+            {/* top */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-semibold text-slate-900">
-                        Hero Section
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Manage conference hero section
+                    <h1 className="text-3xl font-semibold">Hero</h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                        Create / Update / Delete hero section
                     </p>
                 </div>
 
                 <button
                     onClick={openCreate}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-black px-5 py-3 text-sm font-semibold text-white"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-black px-5 py-3 text-white"
                 >
                     <Plus size={18} />
                     Add Hero
                 </button>
             </div>
 
-            {/* error */}
-            {error && (
-                <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
-                    {error}
-                </div>
-            )}
-
-            {/* table */}
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            {/* list */}
+            <div className="rounded-[30px] bg-white p-6 shadow-panel">
                 {loading ? (
-                    <div className="flex items-center justify-center gap-3 py-20 text-slate-500">
+                    <div className="flex justify-center py-20">
                         <Loader2 className="animate-spin" />
-                        Loading...
                     </div>
                 ) : !heroes.length ? (
-                    <div className="py-20 text-center text-slate-500">
-                        No hero found
-                    </div>
+                    <p>No hero found</p>
                 ) : (
-                    <table className="w-full text-left">
-                        <thead className="border-b bg-slate-50">
-                            <tr>
-                                <th className="px-6 py-4">Eyebrow</th>
-                                <th className="px-6 py-4">Title</th>
-                                <th className="px-6 py-4">Date</th>
-                                <th className="px-6 py-4">CTA</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
+                    <div className="space-y-4">
+                        {heroes.map((hero) => (
+                            <div
+                                key={hero.id}
+                                onClick={() => openHero(hero.id)}
+                                className="cursor-pointer rounded-3xl border border-slate-200 p-5 hover:border-black hover:shadow-md transition"
+                            >
+                                <div className="flex justify-between gap-4">
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-semibold">{hero.title}</h3>
 
-                        <tbody>
-                            {heroes.map((hero) => {
-                                const id = hero.id || hero.pk;
+                                        <p className="text-sm text-slate-500">
+                                            {hero.eyebrow}
+                                        </p>
 
-                                return (
-                                    <tr key={id} className="border-b hover:bg-slate-50">
-                                        <td className="px-6 py-5 font-medium">{hero.eyebrow}</td>
-                                        <td className="px-6 py-5">
-                                            <p className="font-semibold">{hero.title}</p>
-                                            <p className="mt-1 text-sm text-slate-500">
-                                                {hero.pretitle}
-                                            </p>
-                                        </td>
-                                        <td className="px-6 py-5">{hero.date_line}</td>
-                                        <td className="px-6 py-5 text-sm">
-                                            {hero.cta_primary_label || "-"} /{" "}
-                                            {hero.cta_secondary_label || "-"}
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEdit(hero)}
-                                                    className="rounded-xl bg-slate-100 p-3 hover:bg-slate-200"
-                                                >
-                                                    <Pencil size={16} />
-                                                </button>
+                                        <p className="text-sm text-slate-500">
+                                            {hero.date_line}
+                                        </p>
 
-                                                <button
-                                                    onClick={() => handleDelete(id)}
-                                                    className="rounded-xl bg-red-100 p-3 text-red-600 hover:bg-red-200"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                        <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm text-green-700">
+                                            <CheckCircle2 size={15} />
+                                            Active Hero
+                                        </span>
+                                    </div>
+
+                                    {/* stop bubbling */}
+                                    <div
+                                        className="flex gap-2 flex-wrap"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <button
+                                            onClick={() => openHeroInfo(hero.id)}
+                                            className="rounded-2xl bg-blue-100 px-4 py-3 text-blue-700"
+                                        >
+                                            <Info size={18} />
+                                        </button>
+
+                                        <button
+                                            onClick={() => openHeroImage(hero.id)}
+                                            className="rounded-2xl bg-emerald-100 px-4 py-3 text-emerald-700"
+                                        >
+                                            <Image size={18} />
+                                        </button>
+
+                                        <button
+                                            onClick={() => openEdit(hero)}
+                                            className="rounded-2xl bg-slate-100 p-3"
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleDelete(hero.id)}
+                                            className="rounded-2xl bg-red-100 p-3 text-red-600"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </div>
 
@@ -351,10 +283,10 @@ const Hero = () => {
             {showModal && (
                 <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
                     <div className="w-full max-w-4xl rounded-3xl bg-white p-8">
-                        <div className="mb-6 flex items-center justify-between">
-                            <h3 className="text-2xl font-semibold">
+                        <div className="mb-6 flex justify-between">
+                            <h2 className="text-2xl font-semibold">
                                 {editing ? "Update Hero" : "Create Hero"}
-                            </h3>
+                            </h2>
 
                             <button onClick={closeModal}>
                                 <X />
@@ -365,71 +297,22 @@ const Hero = () => {
                             onSubmit={handleSubmit(onSubmit)}
                             className="grid gap-4 md:grid-cols-2"
                         >
-                            <input
-                                {...register("eyebrow", { required: true })}
-                                placeholder="Eyebrow"
-                                className="rounded-2xl border p-4"
-                            />
-
-                            <input
-                                {...register("pretitle", { required: true })}
-                                placeholder="Pretitle"
-                                className="rounded-2xl border p-4"
-                            />
-
-                            <input
-                                {...register("title", { required: true })}
-                                placeholder="Title"
-                                className="rounded-2xl border p-4 md:col-span-2"
-                            />
-
-                            <input
-                                {...register("date_line", { required: true })}
-                                placeholder="Date Line"
-                                className="rounded-2xl border p-4 md:col-span-2"
-                            />
-
-                            <textarea
-                                {...register("summary")}
-                                rows={4}
-                                placeholder="Summary"
-                                className="rounded-2xl border p-4 md:col-span-2"
-                            />
-
-                            <input
-                                {...register("cta_primary_label")}
-                                placeholder="Primary CTA Label"
-                                className="rounded-2xl border p-4"
-                            />
-
-                            <input
-                                {...register("cta_primary_link")}
-                                placeholder="Primary CTA Link"
-                                className="rounded-2xl border p-4"
-                            />
-
-                            <input
-                                {...register("cta_secondary_label")}
-                                placeholder="Secondary CTA Label"
-                                className="rounded-2xl border p-4"
-                            />
-
-                            <input
-                                {...register("cta_secondary_link")}
-                                placeholder="Secondary CTA Link"
-                                className="rounded-2xl border p-4"
-                            />
+                            <input {...register("eyebrow")} placeholder="Eyebrow" className="rounded-2xl border p-4" />
+                            <input {...register("pretitle")} placeholder="Pretitle" className="rounded-2xl border p-4" />
+                            <input {...register("title")} placeholder="Title" className="rounded-2xl border p-4 md:col-span-2" />
+                            <input {...register("date_line")} placeholder="Date line" className="rounded-2xl border p-4 md:col-span-2" />
+                            <textarea {...register("summary")} rows={4} placeholder="Summary" className="rounded-2xl border p-4 md:col-span-2" />
+                            <input {...register("cta_primary_label")} placeholder="Primary label" className="rounded-2xl border p-4" />
+                            <input {...register("cta_primary_link")} placeholder="Primary link" className="rounded-2xl border p-4" />
+                            <input {...register("cta_secondary_label")} placeholder="Secondary label" className="rounded-2xl border p-4" />
+                            <input {...register("cta_secondary_link")} placeholder="Secondary link" className="rounded-2xl border p-4" />
 
                             <button
                                 disabled={submitLoading}
-                                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-black py-4 text-white md:col-span-2 disabled:opacity-50"
+                                className="rounded-2xl bg-black py-4 text-white md:col-span-2"
                             >
-                                <Save size={18} />
-                                {submitLoading
-                                    ? "Saving..."
-                                    : editing
-                                        ? "Update Hero"
-                                        : "Create Hero"}
+                                <Save className="inline mr-2" size={18} />
+                                {submitLoading ? "Saving..." : "Save Hero"}
                             </button>
                         </form>
                     </div>

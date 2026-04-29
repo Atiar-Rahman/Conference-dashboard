@@ -1,10 +1,15 @@
 import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     Plus,
     Pencil,
     Trash2,
     Save,
     X,
+    Sparkles,
+    Target,
+    Handshake,
+    MapPin,
 } from "lucide-react";
 
 const initialForm = {
@@ -77,6 +82,33 @@ const AboutEvents = () => {
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
     const [form, setForm] = useState(initialForm);
+    const navigate = useNavigate();
+    const { conferencePk } = useParams();
+
+    const openHeroHighlights = (id) => {
+        navigate(
+            `/conference/${conferencePk}/about-events/${id}/herohighlights`
+        );
+    };
+
+    const openIndexingTarget = (id) => {
+        navigate(
+            `/conference/${conferencePk}/about-events/${id}/indexing-target`
+        );
+    };
+
+    const openSponsor = (id) => {
+        navigate(
+            `/conference/${conferencePk}/about-events/${id}/sponsor`
+        );
+    };
+
+    const openVenueItem = (id) => {
+        navigate(
+            `/conference/${conferencePk}/about-events/${id}/venue-item`
+        );
+    };
+
 
     const handleChange = (e) => {
         setForm({
@@ -169,6 +201,53 @@ const AboutEvents = () => {
                             </div>
 
                             <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
+                                    <button
+                                        onClick={() => openHeroHighlights(item.id)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-blue-100 px-3 py-2 text-sm text-blue-700 hover:bg-blue-200"
+                                    >
+                                        <Sparkles size={15} />
+                                        Highlights
+                                    </button>
+
+                                    <button
+                                        onClick={() => openIndexingTarget(item.id)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-violet-100 px-3 py-2 text-sm text-violet-700 hover:bg-violet-200"
+                                    >
+                                        <Target size={15} />
+                                        Indexing
+                                    </button>
+
+                                    <button
+                                        onClick={() => openSponsor(item.id)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-200"
+                                    >
+                                        <Handshake size={15} />
+                                        Sponsor
+                                    </button>
+
+                                    <button
+                                        onClick={() => openVenueItem(item.id)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-orange-100 px-3 py-2 text-sm text-orange-700 hover:bg-orange-200"
+                                    >
+                                        <MapPin size={15} />
+                                        Venue
+                                    </button>
+
+                                    <button
+                                        onClick={() => openEdit(item)}
+                                        className="rounded-xl border border-slate-200 p-3 hover:bg-slate-50"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleDelete(item.id)}
+                                        className="rounded-xl border border-red-200 p-3 text-red-600 hover:bg-red-50"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                                 <button
                                     onClick={() =>
                                         openEdit(item)

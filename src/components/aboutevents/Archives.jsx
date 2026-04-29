@@ -7,8 +7,9 @@ import {
     X,
     Calendar,
     FileText,
+    Link2
 } from "lucide-react";
-
+import { useNavigate, useParams } from "react-router-dom";
 const initialForm = {
     year: "",
     title: "",
@@ -35,6 +36,15 @@ const Archives = () => {
             ...form,
             [e.target.name]: e.target.value,
         });
+    };
+
+    const navigate = useNavigate();
+    const { conferencePk } = useParams();
+
+    const openArchiveLinks = (archiveId) => {
+        navigate(
+            `/conference/${conferencePk}/archives/${archiveId}/archive-links`
+        );
     };
 
     const openCreate = () => {
@@ -130,8 +140,15 @@ const Archives = () => {
                                     </p>
                                 )}
                             </div>
-
+                                
                             <div className="flex gap-2">
+                                <button
+                                    onClick={() => openArchiveLinks(item.id)}
+                                    className="rounded-xl bg-blue-100 px-4 py-2 text-sm text-blue-700 hover:bg-blue-200"
+                                >
+                                    <Link2 size={15} className="inline mr-2" />
+                                    Links
+                                </button>
                                 <button
                                     onClick={() =>
                                         openEdit(item)

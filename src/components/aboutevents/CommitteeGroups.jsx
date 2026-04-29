@@ -1,38 +1,116 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Outlet } from "react-router-dom";
 import {
     Plus,
     Pencil,
     Trash2,
-    Save,
     X,
+    Save,
+    Loader2,
     Users,
 } from "lucide-react";
+import Swal from "sweetalert2";
+
+import { readStoredAuth } from "../../lib/authStorage";
+import { apiRequest } from "../../lib/api";
 
 const initialForm = {
     title: "",
 };
 
-const demoData = [
-    {
-        id: 1,
-        title: "Organizing Committee",
-    },
-    {
-        id: 2,
-        title: "Technical Program Committee",
-    },
-];
-
 const CommitteeGroups = () => {
-    const [groups, setGroups] = useState(demoData);
+    const { conferencePk, groupPk } = useParams();
+    const navigate = useNavigate();
+    const token = readStoredAuth()?.access;
+
+    const [groups, setGroups] = useState([]);
     const [form, setForm] = useState(initialForm);
     const [editing, setEditing] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [error, setError] = useState("");
 
+    const endpoint = `/api/v1/conferences/${conferencePk}/committee-group/`;
+
+    // ================= API =================
+    const getItems = () =>
+        apiRequest(endpoint, {
+            method: "GET",
+            token,
+            csrf: true,
+        });
+
+    const createItem = (payload) =>
+        apiRequest(endpoint, {
+            method: "POST",
+            token,
+            csrf: true,
+            body: JSON.stringify(payload),
+        });
+
+    const updateItem = async (id, payload) => {
+        try {
+            return await apiRequest(`${endpoint}${id}/`, {
+                method: "PATCH",
+                token,
+                csrf: true,
+                body: JSON.stringify(payload),
+            });
+        } catch (err) {
+            if (err?.status !== 405) throw err;
+
+            return apiRequest(`${endpoint}${id}/`, {
+                method: "PUT",
+                token,
+                csrf: true,
+                body: JSON.stringify(payload),
+            });
+        }
+    };
+
+    const deleteItem = (id) =>
+        apiRequest(`${endpoint}${id}/`, {
+            method: "DELETE",
+            token,
+            csrf: true,
+        });
+
+    // ================= LOAD =================
+    const loadItems = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const data = await getItems();
+
+            const parsed = Array.isArray(data)
+                ? data
+                : data?.results
+                    ? data.results
+                    : data
+                        ? [data]
+                        : [];
+
+            setGroups(parsed);
+        } catch (err) {
+            setGroups([]);
+            setError(err.message || "Failed to load groups");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (conferencePk && !groupPk) {
+            loadItems();
+        }
+    }, [conferencePk, groupPk]);
+
+    // ================= FORM =================
     const handleChange = (e) => {
         setForm({
-            ...form,
-            [e.target.name]: e.target.value,
+            title: e.target.value,
         });
     };
 
@@ -44,150 +122,224 @@ const CommitteeGroups = () => {
 
     const openEdit = (item) => {
         setEditing(item);
-        setForm(item);
+        setForm({
+            title: item.title || "",
+        });
         setShowModal(true);
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        if (!form.title.trim()) return;
-
-        if (editing) {
-            setGroups((prev) =>
-                prev.map((item) =>
-                    item.id === editing.id
-                        ? { ...item, ...form }
-                        : item
-                )
-            );
-        } else {
-            setGroups((prev) => [
-                {
-                    id: Date.now(),
-                    ...form,
-                },
-                ...prev,
-            ]);
-        }
-
+    const closeModal = () => {
+        setEditing(null);
+        setForm(initialForm);
         setShowModal(false);
     };
 
-    const handleDelete = (id) => {
-        setGroups((prev) =>
-            prev.filter((item) => item.id !== id)
+    // ================= SUBMIT =================
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            setSubmitLoading(true);
+
+            const id = editing?.id || editing?.pk;
+
+            if (id) {
+                await updateItem(id, form);
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Updated",
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            } else {
+                await createItem(form);
+
+                Swal.fire({
+                    icon: "success",
+                    title: "Created",
+                    timer: 1500,
+                    showConfirmButton: false,
+                });
+            }
+
+            closeModal();
+            await loadItems();
+        } catch (err) {
+            setError(err.message);
+
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: err.message,
+            });
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+
+    // ================= DELETE =================
+    const handleDelete = async (id) => {
+        const result = await Swal.fire({
+            title: "Delete group?",
+            text: "This action cannot be undone",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc2626",
+            confirmButtonText: "Delete",
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await deleteItem(id);
+            await loadItems();
+
+            Swal.fire({
+                icon: "success",
+                title: "Deleted",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+        } catch (err) {
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: err.message,
+            });
+        }
+    };
+
+    // ================= NAVIGATION =================
+    const openMembers = (groupId) => {
+        navigate(
+            `/conference/${conferencePk}/committee-groups/${groupId}/group-member`
         );
     };
 
+    // child route render
+    if (groupPk) {
+        return <Outlet />;
+    }
+
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             {/* header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-slate-900">
+                    <h2 className="text-2xl font-semibold">
                         Committee Groups
                     </h2>
-                    <p className="text-sm text-slate-500">
-                        Manage conference committee groups
+                    <p className="mt-1 text-sm text-slate-500">
+                        Manage committee groups
                     </p>
                 </div>
 
                 <button
                     onClick={openCreate}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white"
                 >
                     <Plus size={18} />
                     Add Group
                 </button>
             </div>
 
-            {/* list */}
-            <div className="grid gap-4 md:grid-cols-2">
-                {groups.map((group) => (
-                    <div
-                        key={group.id}
-                        className="rounded-[24px] border border-slate-200 bg-white p-5"
-                    >
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
-                                    <Users
-                                        size={24}
-                                        className="text-slate-700"
-                                    />
-                                </div>
-
-                                <div>
-                                    <h3 className="font-semibold text-slate-900">
-                                        {group.title}
-                                    </h3>
-
-                                    <p className="mt-1 text-sm text-slate-500">
-                                        Committee group
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() =>
-                                        openEdit(group)
-                                    }
-                                    className="rounded-xl border border-slate-200 p-3 transition hover:bg-slate-50"
-                                >
-                                    <Pencil size={16} />
-                                </button>
-
-                                <button
-                                    onClick={() =>
-                                        handleDelete(group.id)
-                                    }
-                                    className="rounded-xl border border-red-200 p-3 text-red-600 transition hover:bg-red-50"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {!groups.length && (
-                <div className="rounded-[24px] bg-white p-10 text-center shadow-sm">
-                    <Users
-                        size={40}
-                        className="mx-auto text-slate-300"
-                    />
-
-                    <h3 className="mt-4 font-semibold text-slate-900">
-                        No committee groups found
-                    </h3>
-
-                    <p className="mt-2 text-sm text-slate-500">
-                        Create your first committee group.
-                    </p>
+            {/* error */}
+            {error && (
+                <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {error}
                 </div>
             )}
 
+            {/* list */}
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                {loading ? (
+                    <div className="flex items-center justify-center gap-2 py-20 text-slate-500">
+                        <Loader2 className="animate-spin" />
+                        Loading...
+                    </div>
+                ) : !groups.length ? (
+                    <div className="py-20 text-center text-slate-500">
+                        No committee group found
+                    </div>
+                ) : (
+                    <table className="w-full">
+                        <thead className="border-b bg-slate-50">
+                            <tr>
+                                <th className="px-6 py-4 text-left">Title</th>
+                                <th className="px-6 py-4 text-right">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {groups.map((item) => {
+                                const id = item.id || item.pk;
+
+                                return (
+                                    <tr
+                                        key={id}
+                                        className="border-b hover:bg-slate-50"
+                                    >
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-3">
+                                                <Users size={18} />
+                                                <span className="font-medium">
+                                                    {item.title}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td className="px-6 py-5">
+                                            <div className="flex justify-end gap-2 flex-wrap">
+                                                <button
+                                                    onClick={() =>
+                                                        openMembers(id)
+                                                    }
+                                                    className="rounded-xl bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                                >
+                                                    Members
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        openEdit(item)
+                                                    }
+                                                    className="rounded-xl bg-slate-100 p-3 hover:bg-slate-200"
+                                                >
+                                                    <Pencil size={16} />
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleDelete(id)
+                                                    }
+                                                    className="rounded-xl bg-red-100 p-3 text-red-600 hover:bg-red-200"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+
             {/* modal */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="w-full max-w-xl rounded-[30px] bg-white p-8 shadow-2xl">
+                <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+                    <div className="w-full max-w-xl rounded-3xl bg-white p-8">
                         <div className="mb-6 flex items-center justify-between">
-                            <h2 className="text-2xl font-semibold text-slate-900">
-                                {editing
-                                    ? "Edit Group"
-                                    : "Create Group"}
-                            </h2>
+                            <h3 className="text-xl font-semibold">
+                                {editing ? "Update Group" : "Create Group"}
+                            </h3>
 
-                            <button
-                                onClick={() =>
-                                    setShowModal(false)
-                                }
-                                className="rounded-xl p-2 hover:bg-slate-100"
-                            >
-                                <X size={20} />
+                            <button onClick={closeModal}>
+                                <X />
                             </button>
                         </div>
 
@@ -195,34 +347,25 @@ const CommitteeGroups = () => {
                             onSubmit={handleSubmit}
                             className="space-y-5"
                         >
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
-                                    Group title *
-                                </label>
+                            <input
+                                name="title"
+                                value={form.title}
+                                onChange={handleChange}
+                                placeholder="Group Title"
+                                required
+                                className="w-full rounded-2xl border border-slate-200 p-4 outline-none focus:border-black"
+                            />
 
-                                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-                                    <Users
-                                        size={18}
-                                        className="text-slate-400"
-                                    />
-
-                                    <input
-                                        type="text"
-                                        name="title"
-                                        required
-                                        value={form.title}
-                                        onChange={handleChange}
-                                        placeholder="Committee title"
-                                        className="w-full bg-transparent outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <button className="inline-flex items-center gap-2 rounded-2xl bg-ink px-6 py-3 font-semibold text-white">
+                            <button
+                                disabled={submitLoading}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-black py-4 text-white disabled:opacity-50"
+                            >
                                 <Save size={18} />
-                                {editing
-                                    ? "Update Group"
-                                    : "Save Group"}
+                                {submitLoading
+                                    ? "Saving..."
+                                    : editing
+                                        ? "Update Group"
+                                        : "Create Group"}
                             </button>
                         </form>
                     </div>

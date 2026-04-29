@@ -8,10 +8,9 @@ import {
     Loader2,
 } from "lucide-react";
 import Swal from "sweetalert2";
-import { useParams } from "react-router-dom";
-
 import { readStoredAuth } from "../../lib/authStorage";
 import { apiRequest } from "../../lib/api";
+import { useParams, useNavigate } from "react-router-dom";
 
 const initialForm = {
     name: "",
@@ -20,7 +19,7 @@ const initialForm = {
 const Track = () => {
     const { conferencePk } = useParams();
     const token = readStoredAuth()?.access;
-
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [form, setForm] = useState(initialForm);
     const [editing, setEditing] = useState(null);
@@ -30,6 +29,13 @@ const Track = () => {
     const [error, setError] = useState("");
 
     const endpoint = `/api/v1/conferences/${conferencePk}/track/`;
+
+    const openPaper = (trackId) => {
+        navigate(
+            `/conference/${conferencePk}/track/${trackId}/papers`
+        );
+    };
+
 
     // ================= API =================
     const getItems = () =>
@@ -304,6 +310,13 @@ const Track = () => {
 
                                             <td className="px-4 py-4">
                                                 <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openPaper(id)}
+                                                        className="rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                                    >
+                                                        Papers
+                                                    </button>
+
                                                     <button
                                                         onClick={() => openEdit(item)}
                                                         className="rounded-lg bg-slate-100 p-3 hover:bg-slate-200"

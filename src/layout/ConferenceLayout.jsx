@@ -17,7 +17,8 @@ const sections = [
     "Hero info cards",
     "Hero sections",
     "Importants date",
-    'Keynote'
+    'Keynote',
+    'Register',
 ];
 
 const ConferenceLayout = () => {

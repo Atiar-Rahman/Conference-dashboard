@@ -47,34 +47,60 @@ async function refreshAccessToken(refresh) {
 
 async function apiRequestUncached(
   path,
-  { token, headers, authHeaderPrefix, csrf = false, _refreshTried = false, _altPrefixTried = false, ...options } = {},
+  {
+    token,
+    headers,
+    authHeaderPrefix,
+    csrf = false,
+    _refreshTried = false,
+    _altPrefixTried = false,
+    ...options
+  } = {},
 ) {
   const storedAuth = readStoredAuth();
   const resolvedToken = token || storedAuth?.access || null;
-  const resolvedPrefix = authHeaderPrefix || preferredAuthHeaderPrefix || defaultAuthHeaderPrefix;
+  const resolvedPrefix =
+    authHeaderPrefix ||
+    preferredAuthHeaderPrefix ||
+    defaultAuthHeaderPrefix;
+
   const csrfToken = csrf ? getCsrfToken() : null;
+
+  const isFormData = options.body instanceof FormData;
 
   const response = await fetch(`${requestBaseUrl}${path}`, {
     ...options,
     credentials: defaultCredentialsMode,
     headers: {
       accept: "application/json",
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...(resolvedToken ? { Authorization: `${resolvedPrefix} ${resolvedToken}` } : {}),
-      ...(csrfToken ? { "X-CSRFTOKEN": csrfToken } : {}),
+
+      // FIX
+      ...(options.body && !isFormData
+        ? { "Content-Type": "application/json" }
+        : {}),
+
+      ...(resolvedToken
+        ? { Authorization: `${resolvedPrefix} ${resolvedToken}` }
+        : {}),
+
+      ...(csrfToken
+        ? { "X-CSRFTOKEN": csrfToken }
+        : {}),
+
       ...headers,
     },
   });
 
-  const data = await response
-    .json()
-    .catch(() => null);
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Some backends (e.g. some Djoser setups) expect "JWT <token>" instead of "Bearer <token>".
       if (resolvedToken && !_altPrefixTried) {
-        const alternatePrefix = resolvedPrefix.toLowerCase() === "jwt" ? "Bearer" : "JWT";
+        const alternatePrefix =
+          resolvedPrefix.toLowerCase() === "jwt"
+            ? "Bearer"
+            : "JWT";
+
         return apiRequestUncached(path, {
           token: resolvedToken,
           headers,
@@ -93,7 +119,11 @@ async function apiRequestUncached(
           const nextAccess = refreshed?.access;
 
           if (nextAccess) {
-            writeStoredAuth({ ...(storedAuth || {}), access: nextAccess });
+            writeStoredAuth({
+              ...(storedAuth || {}),
+              access: nextAccess,
+            });
+
             return apiRequestUncached(path, {
               token: nextAccess,
               headers,
@@ -104,8 +134,10 @@ async function apiRequestUncached(
             });
           }
         } catch (refreshError) {
-          // Only clear auth when the refresh token is rejected/expired.
-          if (refreshError?.status === 401 || refreshError?.status === 403) {
+          if (
+            refreshError?.status === 401 ||
+            refreshError?.status === 403
+          ) {
             clearStoredAuth();
           }
         }
@@ -115,7 +147,9 @@ async function apiRequestUncached(
     const message =
       data?.detail ||
       data?.message ||
-      (typeof data === "object" && data !== null ? Object.values(data).flat().join(" ") : null) ||
+      (typeof data === "object" && data !== null
+        ? Object.values(data).flat().join(" ")
+        : null) ||
       "Request failed.";
 
     const error = new Error(message);
@@ -124,9 +158,16 @@ async function apiRequestUncached(
     throw error;
   }
 
-  if (resolvedToken && resolvedPrefix && resolvedPrefix !== preferredAuthHeaderPrefix) {
+  if (
+    resolvedToken &&
+    resolvedPrefix &&
+    resolvedPrefix !== preferredAuthHeaderPrefix
+  ) {
     preferredAuthHeaderPrefix = resolvedPrefix;
-    localStorage.setItem(authHeaderPrefixStorageKey, resolvedPrefix);
+    localStorage.setItem(
+      authHeaderPrefixStorageKey,
+      resolvedPrefix
+    );
   }
 
   return data;

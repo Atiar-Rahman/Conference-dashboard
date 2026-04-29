@@ -22,6 +22,7 @@ import ConferenceContact from "../components/aboutevents/ConferenceContact";
 import Hero from "../pages/conference/Hero";
 import ImportantDates from "../pages/conference/ImportantDates";
 import KeyNote from "../pages/conference/KeyNote";
+import Register from "../pages/conference/Register";
 
 const router = createBrowserRouter([
     {
@@ -108,6 +109,10 @@ const router = createBrowserRouter([
                             {
                                 path:'keynote',
                                 element:<KeyNote/>
+                            },
+                            {
+                                path:'register',
+                                element:<Register/>
                             }
                         ],
                     },

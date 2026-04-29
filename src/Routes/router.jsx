@@ -39,6 +39,11 @@ import VenueItem from "../components/aboutevents/VenueItem";
 import AboutEventLayout from "../layout/AboutEventLayout";
 import TrackLayout from "../layout/TrackLayout";
 import Paper from "../pages/papers/Paper";
+import Sessions from "../components/Sessions";
+import PaperLayout from "../layout/PaperLayout";
+import CoAuthor from "../pages/papers/CoAuthor";
+import ReviewAssign from "../pages/papers/ReviewAssign";
+import StatusUpdate from "../pages/papers/StatusUpdate";
 
 const router = createBrowserRouter([
     {
@@ -213,8 +218,35 @@ const router = createBrowserRouter([
                                         path: ":trackPk",
                                         children: [
                                             {
+                                                path:'session',
+                                                element:<Sessions/>
+                                            },
+                                            {
                                                 path: "papers",
-                                                element: <Paper/>,
+                                                element: <PaperLayout/>,
+                                                children: [
+                                                    {
+                                                        index: true,
+                                                        element: <Paper />,
+                                                    },
+                                                    {
+                                                        path: ":paperPk",
+                                                        children: [
+                                                            {
+                                                                path: "co-author",
+                                                                element: <CoAuthor/>,
+                                                            },
+                                                            {
+                                                                path: "review-assign",
+                                                                element: <ReviewAssign/>,
+                                                            },
+                                                            {
+                                                                path: "status-update",
+                                                                element: <StatusUpdate/>,
+                                                            },
+                                                        ],
+                                                    },
+                                                ],
                                             },
                                         ],
                                     },

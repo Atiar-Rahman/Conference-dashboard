@@ -35,7 +35,11 @@ const Track = () => {
             `/conference/${conferencePk}/track/${trackId}/papers`
         );
     };
-
+    const openSessions = (trackId) => {
+        navigate(
+            `/conference/${conferencePk}/track/${trackId}/session`
+        );
+    };
 
     // ================= API =================
     const getItems = () =>
@@ -310,6 +314,12 @@ const Track = () => {
 
                                             <td className="px-4 py-4">
                                                 <div className="flex justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openSessions(id)}
+                                                        className="rounded-lg bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-200"
+                                                    >
+                                                        Sessions
+                                                    </button>
                                                     <button
                                                         onClick={() => openPaper(id)}
                                                         className="rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"

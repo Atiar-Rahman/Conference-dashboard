@@ -1,38 +1,45 @@
 import { NavLink, Outlet, useParams } from "react-router-dom";
-import { GitBranch, FileText, CalendarDays } from "lucide-react";
+import { FileText, Users, ClipboardCheck, RefreshCcw } from "lucide-react";
 
-const TrackLayout = () => {
-    const { conferencePk, trackPk } = useParams();
+const PaperLayout = () => {
+    const { conferencePk, trackPk, paperPk } = useParams();
 
     const tabs = [
         {
-            name: "Track",
-            icon: GitBranch,
-            path: `/conference/${conferencePk}/track`,
-        },
-    ];
-
-    if (trackPk) {
-        tabs.push({
             name: "Papers",
             icon: FileText,
             path: `/conference/${conferencePk}/track/${trackPk}/papers`,
-        });
-        tabs.push({
-            name: "Sessions",
-            icon: CalendarDays,
-            path: `/conference/${conferencePk}/track/${trackPk}/session`,
-        });
+        },
+    ];
+
+    if (paperPk) {
+        tabs.push(
+            {
+                name: "Co Author",
+                icon: Users,
+                path: `/conference/${conferencePk}/track/${trackPk}/papers/${paperPk}/co-author`,
+            },
+            {
+                name: "Review Assign",
+                icon: ClipboardCheck,
+                path: `/conference/${conferencePk}/track/${trackPk}/papers/${paperPk}/review-assign`,
+            },
+            {
+                name: "Status Update",
+                icon: RefreshCcw,
+                path: `/conference/${conferencePk}/track/${trackPk}/papers/${paperPk}/status-update`,
+            }
+        );
     }
 
     return (
         <div className="space-y-6">
             <div>
                 <h2 className="text-2xl font-bold text-slate-900">
-                    Track Section
+                    Paper Management
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                    Manage track and papers
+                    Manage papers and nested paper data
                 </p>
             </div>
 
@@ -44,7 +51,7 @@ const TrackLayout = () => {
                         <NavLink
                             key={tab.name}
                             to={tab.path}
-                            end
+                            end={tab.name === "Papers"}
                             className={({ isActive }) =>
                                 `inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-medium transition ${isActive
                                     ? "bg-black text-white"
@@ -64,4 +71,4 @@ const TrackLayout = () => {
     );
 };
 
-export default TrackLayout;
+export default PaperLayout;

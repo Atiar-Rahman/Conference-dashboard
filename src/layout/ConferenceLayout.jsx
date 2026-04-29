@@ -7,18 +7,15 @@ import { getConference } from "../lib/api";
 
 const sections = [
     "About events",
-    "Archive links",
     "Archives",
     "Committee groups",
-    "Committee members",
     "Contact infos",
     "Hero",
-    "Hero highlights",
-    "Hero info cards",
-    "Hero sections",
     "Importants date",
     'Keynote',
     'Register',
+    'Welcome',
+    'Track',
 ];
 
 const ConferenceLayout = () => {

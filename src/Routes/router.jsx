@@ -23,6 +23,8 @@ import Hero from "../pages/conference/Hero";
 import ImportantDates from "../pages/conference/ImportantDates";
 import KeyNote from "../pages/conference/KeyNote";
 import Register from "../pages/conference/Register";
+import Welcome from "../pages/conference/Welcome";
+import Track from "../pages/conference/Track";
 
 const router = createBrowserRouter([
     {
@@ -113,6 +115,14 @@ const router = createBrowserRouter([
                             {
                                 path:'register',
                                 element:<Register/>
+                            },
+                            {
+                                path:'welcome',
+                                element:<Welcome/>
+                            },
+                            {
+                                path:'track',
+                                element:<Track/>
                             }
                         ],
                     },

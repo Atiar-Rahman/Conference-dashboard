@@ -18,8 +18,10 @@ import ArchiveLinks from "../components/aboutevents/ArchiveLinks";
 import Archives from "../components/aboutevents/Archives";
 import CommitteeGroups from "../components/aboutevents/CommitteeGroups";
 import CommitteeMembers from "../components/aboutevents/CommitteeMembers";
-import ContactInfos from "../components/aboutevents/ContactInfos";
 import ConferenceContact from "../components/aboutevents/ConferenceContact";
+import Hero from "../pages/conference/Hero";
+import ImportantDates from "../pages/conference/ImportantDates";
+import KeyNote from "../pages/conference/KeyNote";
 
 const router = createBrowserRouter([
     {
@@ -95,6 +97,18 @@ const router = createBrowserRouter([
                                 path: "contact-infos",
                                 element: <ConferenceContact/>,
                             },
+                            {
+                                path:'hero',
+                                element:<Hero/>
+                            },
+                            {
+                                path:'importants-date',
+                                element:<ImportantDates/>
+                            },
+                            {
+                                path:'keynote',
+                                element:<KeyNote/>
+                            }
                         ],
                     },
                 ],

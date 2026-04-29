@@ -12,9 +12,12 @@ const sections = [
     "Committee groups",
     "Committee members",
     "Contact infos",
+    "Hero",
     "Hero highlights",
     "Hero info cards",
     "Hero sections",
+    "Importants date",
+    'Keynote'
 ];
 
 const ConferenceLayout = () => {

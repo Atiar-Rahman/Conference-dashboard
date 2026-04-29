@@ -19,6 +19,7 @@ import Archives from "../components/aboutevents/Archives";
 import CommitteeGroups from "../components/aboutevents/CommitteeGroups";
 import CommitteeMembers from "../components/aboutevents/CommitteeMembers";
 import ContactInfos from "../components/aboutevents/ContactInfos";
+import ConferenceContact from "../components/aboutevents/ConferenceContact";
 
 const router = createBrowserRouter([
     {
@@ -92,7 +93,7 @@ const router = createBrowserRouter([
                             },
                             {
                                 path: "contact-infos",
-                                element: <ContactInfos />,
+                                element: <ConferenceContact/>,
                             },
                         ],
                     },

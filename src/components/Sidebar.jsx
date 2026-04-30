@@ -7,6 +7,8 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  Mail,
+  Book
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 const conferenceId =  'f8fddccb-8763-4188-98b8-7203a1762a94';
@@ -14,6 +16,8 @@ const items = [
   { label: "Overview", to: "/", icon: LayoutDashboard },
   { label: "Submissions", to: "/submissions", icon: FileText },
   { label: "Reviewers", to: "/reviewers", icon: ShieldCheck },
+  { label: "Contact", to: "/contact", icon: Mail },
+  { label: "Call for papers", to: "/callpapers", icon: Book }, 
   { label: "Users", to: "/users", icon: Users },
   {
     label: "Conference",

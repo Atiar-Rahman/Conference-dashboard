@@ -44,6 +44,8 @@ import PaperLayout from "../layout/PaperLayout";
 import CoAuthor from "../pages/papers/CoAuthor";
 import ReviewAssign from "../pages/papers/ReviewAssign";
 import StatusUpdate from "../pages/papers/StatusUpdate";
+import Contact from "../pages/Contact";
+import CallForPaper from "../pages/CallForPaper";
 
 const router = createBrowserRouter([
     {
@@ -69,6 +71,14 @@ const router = createBrowserRouter([
                     {
                         path: "reviewers",
                         element: <ReviewersPage />,
+                    },
+                    {
+                        path:'contact',
+                        element:<Contact/>
+                    },
+                    {
+                        path:'callpapers',
+                        element:<CallForPaper/>
                     },
                     {
                         path: "users",

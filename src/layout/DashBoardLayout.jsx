@@ -50,6 +50,18 @@ const DashboardLayout = () => {
                 subtitle: "Manage submissions",
             };
         }
+        if (path.startsWith("/contact")) {
+            return {
+                title: "All Contact",
+                subtitle: "Manage Contact",
+            };
+        }
+        if (path.startsWith("/callpapers")) {
+            return {
+                title: "Call for Papers",
+                subtitle: "Manage Call for paper",
+            };
+        }
 
         if (path.startsWith("/conferences")) {
             return {

@@ -62,6 +62,18 @@ const DashboardLayout = () => {
                 subtitle: "Manage Call for paper",
             };
         }
+        if (path.startsWith("/registration-fees")) {
+            return {
+                title: "Call for Papers",
+                subtitle: "Manage Call for paper",
+            };
+        }
+        if (path.startsWith("/video-sessions")) {
+            return {
+                title: "Video Sessions",
+                subtitle: "Manage Video Session",
+            };
+        }
 
         if (path.startsWith("/conferences")) {
             return {

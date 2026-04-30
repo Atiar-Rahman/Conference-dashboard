@@ -46,6 +46,8 @@ import ReviewAssign from "../pages/papers/ReviewAssign";
 import StatusUpdate from "../pages/papers/StatusUpdate";
 import Contact from "../pages/Contact";
 import CallForPaper from "../pages/CallForPaper";
+import RegistrationFees from "../pages/RegistrationFees";
+import VideoSessions from "../pages/VideoSessions";
 
 const router = createBrowserRouter([
     {
@@ -79,6 +81,14 @@ const router = createBrowserRouter([
                     {
                         path:'callpapers',
                         element:<CallForPaper/>
+                    },
+                    {
+                        path:'registration-fees',
+                        element:<RegistrationFees/>
+                    },
+                    {
+                        path:'video-sessions',
+                        element:<VideoSessions/>
                     },
                     {
                         path: "users",

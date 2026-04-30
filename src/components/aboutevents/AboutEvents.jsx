@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
     Plus,
@@ -6,11 +6,15 @@ import {
     Trash2,
     Save,
     X,
+    Loader2,
     Sparkles,
     Target,
     Handshake,
     MapPin,
 } from "lucide-react";
+import Swal from "sweetalert2";
+import { readStoredAuth } from "../../lib/authStorage";
+import { apiRequest } from "../../lib/api";
 
 const initialForm = {
     hero_badge: "",
@@ -32,14 +36,24 @@ const initialForm = {
     contact_title: "",
 };
 
-const demoData = [
-    {
-        id: 1,
-        hero_badge: "DUET 2026",
-        hero_title: "International Conference on AI",
-        hero_summary: "Conference details and submission guidelines.",
-        contact_title: "Contact us",
-    },
+const fields = [
+    ["Hero badge", "hero_badge", false, true],
+    ["Hero title", "hero_title", false, true],
+    ["Hero summary", "hero_summary", true],
+    ["Submission process title", "submission_process_title"],
+    ["Full paper title", "full_paper_title"],
+    ["Proceedings title", "proceedings_title"],
+    ["Venue title", "venue_title"],
+    ["Submission path title", "submission_path_title"],
+    ["Where to submit title", "where_to_submit_title"],
+    ["Indexing title", "indexing_title"],
+    ["Indexing disclaimer", "indexing_disclaimer", true],
+    ["Sponsors title", "sponsors_title"],
+    ["Sponsors disclaimer", "sponsors_disclaimer", true],
+    ["Timeline title", "timeline_title"],
+    ["Fees title", "fees_title"],
+    ["Fees summary", "fees_summary", true],
+    ["Contact title", "contact_title"],
 ];
 
 const InputField = ({
@@ -50,71 +64,125 @@ const InputField = ({
     textarea = false,
     required = false,
 }) => (
-    <div>
+    <div className={textarea ? "md:col-span-2" : ""}>
         <label className="mb-2 block text-sm font-medium text-slate-700">
             {label}
         </label>
 
         {textarea ? (
             <textarea
-                name={name}
-                value={value}
-                onChange={onChange}
                 rows={4}
+                name={name}
+                value={value || ""}
+                onChange={onChange}
                 required={required}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-900"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-black"
             />
         ) : (
             <input
                 type="text"
                 name={name}
-                value={value}
+                value={value || ""}
                 onChange={onChange}
                 required={required}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-900"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-black"
             />
         )}
     </div>
 );
 
-const AboutEvents = () => {
-    const [items, setItems] = useState(demoData);
-    const [showModal, setShowModal] = useState(false);
-    const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState(initialForm);
+export default function AboutEvents() {
     const navigate = useNavigate();
     const { conferencePk } = useParams();
+    const token = readStoredAuth()?.access;
 
-    const openHeroHighlights = (id) => {
-        navigate(
-            `/conference/${conferencePk}/about-events/${id}/herohighlights`
-        );
+    const [items, setItems] = useState([]);
+    const [form, setForm] = useState(initialForm);
+    const [editing, setEditing] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [submitLoading, setSubmitLoading] = useState(false);
+
+    const endpoint = `/api/v1/conferences/${conferencePk}/about-event/`;
+
+    // camelCase -> snake_case normalize
+    const normalizeApiData = (item) => ({
+        hero_badge: item.hero_badge || item.heroBadge || "",
+        hero_title: item.hero_title || item.heroTitle || "",
+        hero_summary: item.hero_summary || item.heroSummary || "",
+        submission_process_title:
+            item.submission_process_title ||
+            item.submissionProcessTitle ||
+            "",
+        full_paper_title:
+            item.full_paper_title || item.fullPaperTitle || "",
+        proceedings_title:
+            item.proceedings_title || item.proceedingsTitle || "",
+        venue_title: item.venue_title || item.venueTitle || "",
+        submission_path_title:
+            item.submission_path_title ||
+            item.submissionPathTitle ||
+            "",
+        where_to_submit_title:
+            item.where_to_submit_title ||
+            item.whereToSubmitTitle ||
+            "",
+        indexing_title:
+            item.indexing_title || item.indexingTitle || "",
+        indexing_disclaimer:
+            item.indexing_disclaimer ||
+            item.indexingDisclaimer ||
+            "",
+        sponsors_title:
+            item.sponsors_title || item.sponsorsTitle || "",
+        sponsors_disclaimer:
+            item.sponsors_disclaimer ||
+            item.sponsorsDisclaimer ||
+            "",
+        timeline_title:
+            item.timeline_title || item.timelineTitle || "",
+        fees_title: item.fees_title || item.feesTitle || "",
+        fees_summary:
+            item.fees_summary || item.feesSummary || "",
+        contact_title:
+            item.contact_title || item.contactTitle || "",
+    });
+
+    const loadItems = async () => {
+        try {
+            setLoading(true);
+
+            const res = await apiRequest(endpoint, {
+                method: "GET",
+                token,
+            });
+
+            const data = Array.isArray(res)
+                ? res
+                : Array.isArray(res?.results)
+                    ? res.results
+                    : res
+                        ? [res]
+                        : [];
+
+            setItems(data);
+        } catch (err) {
+            console.error(err);
+            setItems([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const openIndexingTarget = (id) => {
-        navigate(
-            `/conference/${conferencePk}/about-events/${id}/indexing-target`
-        );
-    };
-
-    const openSponsor = (id) => {
-        navigate(
-            `/conference/${conferencePk}/about-events/${id}/sponsor`
-        );
-    };
-
-    const openVenueItem = (id) => {
-        navigate(
-            `/conference/${conferencePk}/about-events/${id}/venue-item`
-        );
-    };
-
+    useEffect(() => {
+        if (conferencePk) loadItems();
+    }, [conferencePk]);
 
     const handleChange = (e) => {
-        setForm({
-            ...form,
+        setForm((prev) => ({
+            ...prev,
             [e.target.name]: e.target.value,
-        });
+        }));
     };
 
     const openCreate = () => {
@@ -125,168 +193,247 @@ const AboutEvents = () => {
 
     const openEdit = (item) => {
         setEditing(item);
-        setForm(item);
+        setForm(normalizeApiData(item));
         setShowModal(true);
     };
 
-    const handleSubmit = (e) => {
+    const closeModal = () => {
+        setShowModal(false);
+        setEditing(null);
+        setForm(initialForm);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (editing) {
-            setItems((prev) =>
-                prev.map((item) =>
-                    item.id === editing.id
-                        ? { ...item, ...form }
-                        : item
-                )
-            );
-        } else {
-            setItems((prev) => [
-                ...prev,
-                {
-                    id: Date.now(),
-                    ...form,
-                },
-            ]);
+        try {
+            setSubmitLoading(true);
+
+            if (editing?.id) {
+                await apiRequest(`${endpoint}${editing.id}/`, {
+                    method: "PATCH",
+                    token,
+                    csrf: true,
+                    body: JSON.stringify(form),
+                });
+            } else {
+                await apiRequest(endpoint, {
+                    method: "POST",
+                    token,
+                    csrf: true,
+                    body: JSON.stringify(form),
+                });
+            }
+
+            Swal.fire({
+                icon: "success",
+                title: "Success",
+                timer: 1000,
+                showConfirmButton: false,
+            });
+
+            closeModal();
+            loadItems();
+        } catch (err) {
+            Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: err.message,
+            });
+        } finally {
+            setSubmitLoading(false);
         }
-
-        setShowModal(false);
     };
 
-    const handleDelete = (id) => {
-        setItems((prev) =>
-            prev.filter((item) => item.id !== id)
-        );
+    const handleDelete = async (id) => {
+        await apiRequest(`${endpoint}${id}/`, {
+            method: "DELETE",
+            token,
+            csrf: true,
+        });
+
+        loadItems();
     };
+
+    const openHeroHighlights = (id) =>
+        navigate(`/conference/${conferencePk}/about-events/${id}/herohighlights`);
+
+    const openIndexingTarget = (id) =>
+        navigate(`/conference/${conferencePk}/about-events/${id}/indexing-target`);
+
+    const openSponsor = (id) =>
+        navigate(`/conference/${conferencePk}/about-events/${id}/sponsor`);
+
+    const openVenueItem = (id) =>
+        navigate(`/conference/${conferencePk}/about-events/${id}/venue-item`);
 
     return (
         <div className="space-y-5">
-            {/* top */}
             <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-slate-500">
-                        Manage about event content
-                    </p>
-                </div>
+                <p className="text-sm text-slate-500">
+                    Manage about event content
+                </p>
 
-                <button
-                    onClick={openCreate}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white"
-                >
-                    <Plus size={18} />
-                    Add About Event
-                </button>
-            </div>
-
-            {/* list */}
-            <div className="space-y-4">
-                {items.map((item) => (
-                    <div
-                        key={item.id}
-                        className="rounded-[24px] border border-slate-200 bg-white p-5"
+                {!items.length && (
+                    <button
+                        onClick={openCreate}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-black px-5 py-3 text-sm font-semibold text-white"
                     >
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                                    {item.hero_badge}
-                                </span>
-
-                                <h2 className="mt-3 text-xl font-semibold text-slate-900">
-                                    {item.hero_title}
-                                </h2>
-
-                                <p className="mt-2 text-sm text-slate-500">
-                                    {item.hero_summary}
-                                </p>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <div className="flex flex-wrap gap-2">
-                                    <button
-                                        onClick={() => openHeroHighlights(item.id)}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-blue-100 px-3 py-2 text-sm text-blue-700 hover:bg-blue-200"
-                                    >
-                                        <Sparkles size={15} />
-                                        Highlights
-                                    </button>
-
-                                    <button
-                                        onClick={() => openIndexingTarget(item.id)}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-violet-100 px-3 py-2 text-sm text-violet-700 hover:bg-violet-200"
-                                    >
-                                        <Target size={15} />
-                                        Indexing
-                                    </button>
-
-                                    <button
-                                        onClick={() => openSponsor(item.id)}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-200"
-                                    >
-                                        <Handshake size={15} />
-                                        Sponsor
-                                    </button>
-
-                                    <button
-                                        onClick={() => openVenueItem(item.id)}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-orange-100 px-3 py-2 text-sm text-orange-700 hover:bg-orange-200"
-                                    >
-                                        <MapPin size={15} />
-                                        Venue
-                                    </button>
-
-                                    <button
-                                        onClick={() => openEdit(item)}
-                                        className="rounded-xl border border-slate-200 p-3 hover:bg-slate-50"
-                                    >
-                                        <Pencil size={16} />
-                                    </button>
-
-                                    <button
-                                        onClick={() => handleDelete(item.id)}
-                                        className="rounded-xl border border-red-200 p-3 text-red-600 hover:bg-red-50"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
-                                </div>
-                                <button
-                                    onClick={() =>
-                                        openEdit(item)
-                                    }
-                                    className="rounded-xl border border-slate-200 p-3 hover:bg-slate-50"
-                                >
-                                    <Pencil size={16} />
-                                </button>
-
-                                <button
-                                    onClick={() =>
-                                        handleDelete(item.id)
-                                    }
-                                    className="rounded-xl border border-red-200 p-3 text-red-600 hover:bg-red-50"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                        <Plus size={18} />
+                        Add About Event
+                    </button>
+                )}
             </div>
 
-            {/* modal */}
+            {/* TABLE */}
+            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                {loading ? (
+                    <div className="flex items-center justify-center gap-2 py-20 text-slate-500">
+                        <Loader2 className="animate-spin" size={18} />
+                        Loading...
+                    </div>
+                ) : !items.length ? (
+                    <div className="py-20 text-center text-slate-500">
+                        No about event found
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[1200px]">
+                            <thead className="border-b bg-slate-50">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                                        Hero Badge
+                                    </th>
+
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                                        Hero Title
+                                    </th>
+
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                                        Summary
+                                    </th>
+
+                                    <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                                        Manage
+                                    </th>
+
+                                    <th className="px-6 py-4 text-right text-sm font-semibold text-slate-700">
+                                        Action
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {items.map((item) => (
+                                    <tr
+                                        key={item.id}
+                                        className="border-b transition hover:bg-slate-50"
+                                    >
+                                        {/* badge */}
+                                        <td className="px-6 py-5">
+                                            <span className="inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+                                                {item.heroBadge || item.hero_badge}
+                                            </span>
+                                        </td>
+
+                                        {/* title */}
+                                        <td className="px-6 py-5">
+                                            <h3 className="font-semibold text-slate-900">
+                                                {item.heroTitle || item.hero_title}
+                                            </h3>
+                                        </td>
+
+                                        {/* summary */}
+                                        <td className="max-w-md px-6 py-5 text-sm text-slate-500">
+                                            <p className="line-clamp-2">
+                                                {item.heroSummary ||
+                                                    item.hero_summary ||
+                                                    "-"}
+                                            </p>
+                                        </td>
+
+                                        {/* manage buttons */}
+                                        <td className="px-6 py-5">
+                                            <div className="flex flex-wrap justify-center gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        openHeroHighlights(item.id)
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-xl bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-200"
+                                                >
+                                                    <Sparkles size={15} />
+                                                    Highlights
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        openIndexingTarget(item.id)
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-xl bg-violet-100 px-3 py-2 text-sm font-medium text-violet-700 hover:bg-violet-200"
+                                                >
+                                                    <Target size={15} />
+                                                    Indexing
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        openSponsor(item.id)
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-200"
+                                                >
+                                                    <Handshake size={15} />
+                                                    Sponsor
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        openVenueItem(item.id)
+                                                    }
+                                                    className="inline-flex items-center gap-2 rounded-xl bg-orange-100 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-200"
+                                                >
+                                                    <MapPin size={15} />
+                                                    Venue
+                                                </button>
+                                            </div>
+                                        </td>
+
+                                        {/* action */}
+                                        <td className="px-6 py-5">
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => openEdit(item)}
+                                                    className="rounded-xl bg-slate-100 p-3 hover:bg-slate-200"
+                                                >
+                                                    <Pencil size={16} />
+                                                </button>
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleDelete(item.id)
+                                                    }
+                                                    className="rounded-xl bg-red-100 p-3 text-red-600 hover:bg-red-200"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[30px] bg-white p-8">
-                        <div className="mb-6 flex items-center justify-between">
+                    <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white p-8">
+                        <div className="mb-6 flex justify-between">
                             <h2 className="text-2xl font-semibold">
-                                {editing
-                                    ? "Edit About Event"
-                                    : "Create About Event"}
+                                {editing ? "Edit" : "Create"} About Event
                             </h2>
 
-                            <button
-                                onClick={() =>
-                                    setShowModal(false)
-                                }
-                            >
+                            <button onClick={closeModal}>
                                 <X />
                             </button>
                         </div>
@@ -295,73 +442,26 @@ const AboutEvents = () => {
                             onSubmit={handleSubmit}
                             className="grid gap-5 md:grid-cols-2"
                         >
-                            <InputField
-                                label="Hero badge"
-                                name="hero_badge"
-                                value={form.hero_badge}
-                                onChange={handleChange}
-                                required
-                            />
-
-                            <InputField
-                                label="Hero title"
-                                name="hero_title"
-                                value={form.hero_title}
-                                onChange={handleChange}
-                                required
-                            />
+                            {fields.map(
+                                ([label, name, textarea, required]) => (
+                                    <InputField
+                                        key={name}
+                                        label={label}
+                                        name={name}
+                                        value={form[name]}
+                                        onChange={handleChange}
+                                        textarea={textarea}
+                                        required={required}
+                                    />
+                                )
+                            )}
 
                             <div className="md:col-span-2">
-                                <InputField
-                                    label="Hero summary"
-                                    name="hero_summary"
-                                    value={form.hero_summary}
-                                    onChange={handleChange}
-                                    textarea
-                                />
-                            </div>
-
-                            <InputField
-                                label="Submission process"
-                                name="submission_process_title"
-                                value={
-                                    form.submission_process_title
-                                }
-                                onChange={handleChange}
-                            />
-
-                            <InputField
-                                label="Full paper title"
-                                name="full_paper_title"
-                                value={form.full_paper_title}
-                                onChange={handleChange}
-                            />
-
-                            <InputField
-                                label="Proceedings title"
-                                name="proceedings_title"
-                                value={form.proceedings_title}
-                                onChange={handleChange}
-                            />
-
-                            <InputField
-                                label="Venue title"
-                                name="venue_title"
-                                value={form.venue_title}
-                                onChange={handleChange}
-                            />
-
-                            <InputField
-                                label="Contact title"
-                                name="contact_title"
-                                value={form.contact_title}
-                                onChange={handleChange}
-                            />
-
-                            <div className="md:col-span-2">
-                                <button className="inline-flex items-center gap-2 rounded-2xl bg-ink px-6 py-3 font-semibold text-white">
+                                <button className="inline-flex items-center gap-2 rounded-2xl bg-black px-6 py-3 font-semibold text-white">
                                     <Save size={18} />
-                                    Save
+                                    {submitLoading
+                                        ? "Saving..."
+                                        : "Save"}
                                 </button>
                             </div>
                         </form>
@@ -370,6 +470,4 @@ const AboutEvents = () => {
             )}
         </div>
     );
-};
-
-export default AboutEvents;
+}

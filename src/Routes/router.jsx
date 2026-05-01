@@ -48,6 +48,9 @@ import Contact from "../pages/Contact";
 import CallForPaper from "../pages/CallForPaper";
 import RegistrationFees from "../pages/RegistrationFees";
 import VideoSessions from "../pages/VideoSessions";
+import RegisterComponent from "../pages/register/RegisterComponent";
+import ConferenceRegistrationDashboard from "../pages/register/ConferenceRegistrationDashboard";
+import RegistrationFeesComponent from "../pages/RegistrationFeesComponent";
 
 const router = createBrowserRouter([
     {
@@ -75,20 +78,20 @@ const router = createBrowserRouter([
                         element: <ReviewersPage />,
                     },
                     {
-                        path:'contact',
-                        element:<Contact/>
+                        path: 'contact',
+                        element: <Contact />
                     },
                     {
-                        path:'callpapers',
-                        element:<CallForPaper/>
+                        path: 'callpapers',
+                        element: <CallForPaper />
                     },
                     {
-                        path:'registration-fees',
-                        element:<RegistrationFees/>
+                        path: 'registration-fees',
+                        element: <RegistrationFees />
                     },
                     {
-                        path:'video-sessions',
-                        element:<VideoSessions/>
+                        path: 'video-sessions',
+                        element: <VideoSessions />
                     },
                     {
                         path: "users",
@@ -111,7 +114,7 @@ const router = createBrowserRouter([
                             // ABOUT EVENT
                             {
                                 path: "about-events",
-                                element: <AboutEventLayout/>,
+                                element: <AboutEventLayout />,
                                 children: [
                                     {
                                         index: true,
@@ -122,19 +125,19 @@ const router = createBrowserRouter([
                                         children: [
                                             {
                                                 path: "herohighlights",
-                                                element: <HeroHighlights/>,
+                                                element: <HeroHighlights />,
                                             },
                                             {
                                                 path: "indexing-target",
-                                                element: <IndexingTarget/>
+                                                element: <IndexingTarget />
                                             },
                                             {
                                                 path: "sponsor",
-                                                element: <Sponsor/>,
+                                                element: <Sponsor />,
                                             },
                                             {
                                                 path: "venue-item",
-                                                element: <VenueItem/>,
+                                                element: <VenueItem />,
                                             },
                                         ],
                                     },
@@ -143,7 +146,7 @@ const router = createBrowserRouter([
                             // archives 
                             {
                                 path: "archives",
-                                element: <ArchivesLayout/>,
+                                element: <ArchivesLayout />,
                                 children: [
                                     {
                                         index: true,
@@ -163,7 +166,7 @@ const router = createBrowserRouter([
                             // COMMITTEE
                             {
                                 path: "committee-groups",
-                                element: <ConferenceCommiteeLayout/>,
+                                element: <ConferenceCommiteeLayout />,
                                 children: [
                                     {
                                         index: true,
@@ -225,10 +228,25 @@ const router = createBrowserRouter([
                                 path: "welcome",
                                 element: <Welcome />,
                             },
+                            // REGISTER
+                            {
+                                path: "registration",
+                                element: <RegisterComponent />,
+                            },
+
+                            // REGISTRATION DASHBOARD
+                            {
+                                path: "registration/:registrationId",
+                                element: <ConferenceRegistrationDashboard />,
+                            },
+                            {
+                                path:'fees',
+                                element:<RegistrationFeesComponent/>
+                            },
                             // TRACK
                             {
                                 path: "track",
-                                element: <TrackLayout/>,
+                                element: <TrackLayout />,
                                 children: [
                                     {
                                         index: true,
@@ -238,12 +256,12 @@ const router = createBrowserRouter([
                                         path: ":trackPk",
                                         children: [
                                             {
-                                                path:'session',
-                                                element:<Sessions/>
+                                                path: 'session',
+                                                element: <Sessions />
                                             },
                                             {
                                                 path: "papers",
-                                                element: <PaperLayout/>,
+                                                element: <PaperLayout />,
                                                 children: [
                                                     {
                                                         index: true,
@@ -254,15 +272,15 @@ const router = createBrowserRouter([
                                                         children: [
                                                             {
                                                                 path: "co-author",
-                                                                element: <CoAuthor/>,
+                                                                element: <CoAuthor />,
                                                             },
                                                             {
                                                                 path: "review-assign",
-                                                                element: <ReviewAssign/>,
+                                                                element: <ReviewAssign />,
                                                             },
                                                             {
                                                                 path: "status-update",
-                                                                element: <StatusUpdate/>,
+                                                                element: <StatusUpdate />,
                                                             },
                                                         ],
                                                     },

@@ -441,4 +441,121 @@ export function getAdminConferenceChangeUrl(id) {
 export function getAdminConferenceDeleteUrl(id) {
   return `${requestBaseUrl}/admin/conferences/conference/${id}/delete/`;
 }
+
+export async function getConferenceTracks(conferencePk) {
+  return apiRequest(
+    `/api/v1/conferences/${conferencePk}/register/tracks/`,
+    {
+      method: "GET",
+    }
+  );
+}
+
+export const getConferenceRegisterFormOptions = async (
+  conferencePk,
+  token
+) => {
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(
+    `${requestBaseUrl}/api/v1/conferences/${conferencePk}/register/form-options/`,
+    {
+      headers,
+    }
+  );
+
+  return res.json();
+};
+
+export const getConferenceFeeSummary = async (
+  conferencePk,
+  payload,
+  token
+) => {
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(
+    `${requestBaseUrl}/api/v1/conferences/${conferencePk}/register/fee-summary/`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    }
+  );
+
+  return res.json();
+};
+
+export const createConferenceRegistration = async (
+  conferencePk,
+  payload,
+  token
+) => {
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(
+    `${requestBaseUrl}/api/v1/conferences/${conferencePk}/register/`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    }
+  );
+
+  return res.json();
+};
+
+export const getConferenceRegistration = async (
+  conferencePk,
+  registrationId,
+  token
+) => {
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(
+    `${requestBaseUrl}/api/v1/conferences/${conferencePk}/register/${registrationId}/`,
+    {
+      headers,
+    }
+  );
+
+  return res.json();
+};
+
+export const payConferenceRegistration = async (
+  conferencePk,
+  registrationId,
+  token
+) => {
+  const headers = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(
+    `${requestBaseUrl}/api/v1/conferences/${conferencePk}/register/${registrationId}/pay/`,
+    {
+      method: "POST",
+      headers,
+    }
+  );
+
+  return res.json();
+};
 export { apiRequest };

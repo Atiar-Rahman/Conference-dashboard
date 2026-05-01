@@ -16,6 +16,8 @@ const sections = [
     'Register',
     'Welcome',
     'Track',
+    'Registration',
+    'Fees'
 ];
 
 const ConferenceLayout = () => {

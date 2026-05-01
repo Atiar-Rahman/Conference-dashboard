@@ -5,16 +5,8 @@ import {
     payConferenceRegistration,
 } from "../../lib/api";
 
-import { readStoredAuth } from "../../lib/authStorage";
-
-/**
- * Props:
- * getRegistration(conferencePk, registrationId)
- * payRegistration(conferencePk, registrationId)
- */
 const ConferenceRegistrationDashboard = () => {
     const { conferencePk, registrationId } = useParams();
-    const token = readStoredAuth()?.access;
 
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
@@ -23,11 +15,13 @@ const ConferenceRegistrationDashboard = () => {
     const loadRegistration = async () => {
         try {
             setLoading(true);
+
             const res = await getConferenceRegistration(
                 conferencePk,
-                registrationId,
-                token
+                registrationId
             );
+
+            console.log("registration =", res);
             setRegistration(res);
         } catch (error) {
             console.error(error);
@@ -37,6 +31,7 @@ const ConferenceRegistrationDashboard = () => {
     };
 
     useEffect(() => {
+        if (!conferencePk || !registrationId) return;
         loadRegistration();
     }, [conferencePk, registrationId]);
 
@@ -46,17 +41,14 @@ const ConferenceRegistrationDashboard = () => {
 
             const res = await payConferenceRegistration(
                 conferencePk,
-                registrationId,
-                token
+                registrationId
             );
 
-            // যদি gateway_url আসে → redirect
             if (res?.gateway_url) {
                 window.location.href = res.gateway_url;
                 return;
             }
 
-            // fallback reload
             await loadRegistration();
         } catch (error) {
             console.error(error);
@@ -67,7 +59,7 @@ const ConferenceRegistrationDashboard = () => {
 
     if (loading) {
         return (
-            <div className="max-w-6xl mx-auto py-20 text-center text-lg">
+            <div className="max-w-7xl mx-auto py-20 text-center text-lg font-medium">
                 Loading registration...
             </div>
         );
@@ -75,38 +67,42 @@ const ConferenceRegistrationDashboard = () => {
 
     if (!registration) {
         return (
-            <div className="max-w-6xl mx-auto py-20 text-center text-red-500">
+            <div className="max-w-7xl mx-auto py-20 text-center text-red-500">
                 Registration not found
             </div>
         );
     }
 
-    const personal = registration.personal_infos || {};
+    const authors = registration.personal_infos || [];
     const paper = registration.paper_info || {};
     const billing = registration.billing_contact || {};
     const payments = registration.payments || [];
+    const fee = registration.fee_detail || {};
 
     const paid =
-        registration.payment_status === "paid" ||
+        registration.payment_status === true ||
         registration.status === "paid";
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-10">
             <div className="grid lg:grid-cols-3 gap-6">
-                {/* left */}
+                {/* LEFT */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* status */}
-                    <div className="bg-white rounded-2xl shadow p-6">
+                    <Card>
                         <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-sm text-slate-500">Registration ID</p>
+                                <p className="text-sm text-slate-500">
+                                    Registration ID
+                                </p>
+
                                 <h2 className="text-2xl font-bold mt-1">
-                                    {registration.id}
+                                    #{registration.id}
                                 </h2>
                             </div>
 
                             <span
-                                className={`px-4 py-2 rounded-full text-sm font-medium ${paid
+                                className={`px-4 py-2 rounded-full text-sm font-semibold ${paid
                                     ? "bg-green-100 text-green-700"
                                     : "bg-yellow-100 text-yellow-700"
                                     }`}
@@ -114,31 +110,85 @@ const ConferenceRegistrationDashboard = () => {
                                 {paid ? "Paid" : "Pending Payment"}
                             </span>
                         </div>
-                    </div>
+                    </Card>
 
-                    {/* personal */}
-                    <Card title="Personal Information">
-                        <Info label="Full Name" value={personal.full_name} />
-                        <Info label="Email" value={personal.email} />
-                        <Info label="Phone" value={personal.phone_number} />
-                        <Info label="Country" value={personal.country} />
-                        <Info label="Institution" value={personal.institution} />
-                        <Info
-                            label="Attendance Type"
-                            value={personal.attendance_type}
-                        />
+                    {/* authors */}
+                    <Card title={`Authors (${authors.length})`}>
+                        <div className="space-y-6">
+                            {authors.map((author, index) => (
+                                <div
+                                    key={index}
+                                    className="border rounded-2xl p-5 bg-slate-50"
+                                >
+                                    <h4 className="font-bold text-lg mb-4">
+                                        Author {index + 1}
+                                    </h4>
+
+                                    <div className="grid md:grid-cols-2 gap-3">
+                                        <Info
+                                            label="Full Name"
+                                            value={author.full_name}
+                                        />
+                                        <Info
+                                            label="Email"
+                                            value={author.email}
+                                        />
+                                        <Info
+                                            label="Phone"
+                                            value={author.phone_number}
+                                        />
+                                        <Info
+                                            label="Country"
+                                            value={author.country}
+                                        />
+                                        <Info
+                                            label="Institution"
+                                            value={author.institution}
+                                        />
+                                        <Info
+                                            label="Attendance"
+                                            value={author.attendance_type}
+                                        />
+                                        <Info
+                                            label="Student"
+                                            value={
+                                                author.is_student
+                                                    ? "Yes"
+                                                    : "No"
+                                            }
+                                        />
+                                        <Info
+                                            label="Presenter"
+                                            value={
+                                                author.will_present
+                                                    ? "Yes"
+                                                    : "No"
+                                            }
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </Card>
 
                     {/* paper */}
                     <Card title="Paper Information">
-                        <Info label="Paper Title" value={paper.paper_title} />
-                        <Info label="Track" value={paper.track_name || paper.track} />
+                        <Info
+                            label="Paper Title"
+                            value={paper.paper_title}
+                        />
+
+                        <Info
+                            label="Track"
+                            value={paper.track_name || paper.track}
+                        />
+
                         <Info
                             label="Paper IDs"
                             value={
                                 Array.isArray(paper.paper_ids)
                                     ? paper.paper_ids.join(", ")
-                                    : "-"
+                                    : paper.paper_ids || "-"
                             }
                         />
                     </Card>
@@ -150,10 +200,12 @@ const ConferenceRegistrationDashboard = () => {
                         <Info label="Phone" value={billing.number} />
                     </Card>
 
-                    {/* payment history */}
+                    {/* payments */}
                     <Card title="Payment History">
                         {!payments.length ? (
-                            <p className="text-slate-500">No payment history yet</p>
+                            <p className="text-slate-500">
+                                No payment history
+                            </p>
                         ) : (
                             <div className="space-y-4">
                                 {payments.map((payment) => (
@@ -165,6 +217,7 @@ const ConferenceRegistrationDashboard = () => {
                                             <p className="font-semibold">
                                                 {payment.transaction_id}
                                             </p>
+
                                             <p className="text-sm text-slate-500">
                                                 {payment.gateway}
                                             </p>
@@ -172,12 +225,13 @@ const ConferenceRegistrationDashboard = () => {
 
                                         <div className="text-right">
                                             <p className="font-bold">
-                                                {payment.amount} {payment.currency || ""}
+                                                {payment.amount}{" "}
+                                                {payment.currency}
                                             </p>
 
-                                            <span className="text-sm text-blue-600 capitalize">
+                                            <p className="text-sm capitalize text-blue-600">
                                                 {payment.status}
-                                            </span>
+                                            </p>
                                         </div>
                                     </div>
                                 ))}
@@ -186,7 +240,7 @@ const ConferenceRegistrationDashboard = () => {
                     </Card>
                 </div>
 
-                {/* right */}
+                {/* RIGHT */}
                 <div>
                     <div className="bg-white rounded-2xl shadow p-6 sticky top-24">
                         <h3 className="text-xl font-bold mb-5">
@@ -194,41 +248,56 @@ const ConferenceRegistrationDashboard = () => {
                         </h3>
 
                         <Row
+                            label="Fee Title"
+                            value={fee.title}
+                        />
+
+                        <Row
+                            label="Category"
+                            value={fee.category?.replaceAll("_", " ")}
+                        />
+
+                        <Row
+                            label="Per Author"
+                            value={`${fee.amount || 0} ${fee.currency || ""
+                                }`}
+                        />
+
+                        <Row
                             label="Author Count"
                             value={registration.author_count}
                         />
 
                         <Row
-                            label="Payment Status"
-                            value={registration.payment_status || "pending"}
+                            label="Status"
+                            value={registration.status}
                         />
 
                         <Row
-                            label="Transaction ID"
+                            label="Transaction"
                             value={registration.transaction_id || "-"}
                         />
 
                         <div className="border-t my-4" />
 
-                        <div className="flex justify-between text-lg font-bold">
+                        <div className="flex justify-between text-xl font-bold text-blue-600">
                             <span>Total</span>
+
                             <span>
-                                {registration.total_amount || 0}{" "}
-                                {registration.currency || ""}
+                                {registration.total_amount}{" "}
+                                {fee.currency || ""}
                             </span>
                         </div>
 
-                        {!paid && (
+                        {!paid ? (
                             <button
                                 onClick={handlePayment}
                                 disabled={paying}
-                                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-semibold"
+                                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-semibold disabled:opacity-50"
                             >
                                 {paying ? "Processing..." : "Pay Now"}
                             </button>
-                        )}
-
-                        {paid && (
+                        ) : (
                             <div className="mt-6 bg-green-50 text-green-700 rounded-xl p-4 text-center font-medium">
                                 Payment Completed
                             </div>
@@ -247,7 +316,12 @@ export default ConferenceRegistrationDashboard;
 function Card({ title, children }) {
     return (
         <div className="bg-white rounded-2xl shadow p-6">
-            <h3 className="text-xl font-bold mb-5">{title}</h3>
+            {title && (
+                <h3 className="text-xl font-bold mb-5">
+                    {title}
+                </h3>
+            )}
+
             <div className="space-y-3">{children}</div>
         </div>
     );
@@ -266,9 +340,11 @@ function Info({ label, value }) {
 
 function Row({ label, value }) {
     return (
-        <div className="flex justify-between py-2">
+        <div className="flex justify-between py-2 border-b">
             <span className="text-slate-500">{label}</span>
-            <span className="font-semibold">{value}</span>
+            <span className="font-semibold capitalize">
+                {value || "-"}
+            </span>
         </div>
     );
 }

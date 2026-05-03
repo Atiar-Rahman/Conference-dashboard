@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 
 import { readStoredAuth } from "../lib/authStorage";
+import { writeActiveConferenceId } from "../lib/activeConference";
 import { getConference } from "../lib/api";
 
 const sections = [
@@ -37,6 +38,7 @@ const ConferenceLayout = () => {
 
                 const data = await getConference(conferencePk, token);
                 setConference(data);
+                writeActiveConferenceId(conferencePk);
             } catch (err) {
                 console.error(err);
                 setError(err.message || "Failed to load conference");

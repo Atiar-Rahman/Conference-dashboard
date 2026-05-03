@@ -1,7 +1,5 @@
 import {
-  BellRing,
   CalendarRange,
-  CreditCard,
   FileText,
   LayoutDashboard,
   Settings,
@@ -13,7 +11,7 @@ import {
   Video
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-const conferenceId =  'f8fddccb-8763-4188-98b8-7203a1762a94';
+
 const items = [
   { label: "Overview", to: "/", icon: LayoutDashboard },
   { label: "Submissions", to: "/submissions", icon: FileText },
@@ -25,7 +23,7 @@ const items = [
   { label: "Users", to: "/users", icon: Users },
   {
     label: "Conference",
-    to: `/conference/${conferenceId}`,
+    to: "/conference",
     icon: CalendarRange,
   },
   { label: "Restore and Delete", to: "/restore", icon: Users },

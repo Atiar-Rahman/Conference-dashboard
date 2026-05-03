@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Plus,
   Pencil,
@@ -10,6 +10,11 @@ import {
 } from "lucide-react";
 
 import { readStoredAuth } from "../lib/authStorage";
+import {
+  clearActiveConferenceId,
+  readActiveConferenceId,
+  writeActiveConferenceId,
+} from "../lib/activeConference";
 import {
   createConference,
   deleteConference,
@@ -28,6 +33,7 @@ const initialForm = {
 };
 
 const ConferencePage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const token = readStoredAuth()?.access;
 
@@ -37,6 +43,9 @@ const ConferencePage = () => {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const searchParams = new URLSearchParams(location.search);
+  const shouldOpenCreateModal = searchParams.get("create") === "true";
+  const shouldAutoOpen = !shouldOpenCreateModal;
 
   const loadConferences = async () => {
     try {
@@ -54,6 +63,30 @@ const ConferencePage = () => {
   useEffect(() => {
     loadConferences();
   }, []);
+
+  useEffect(() => {
+    if (shouldOpenCreateModal) {
+      setEditing(null);
+      setForm(initialForm);
+      setOpenModal(true);
+    }
+  }, [shouldOpenCreateModal]);
+
+  useEffect(() => {
+    if (loading || !shouldAutoOpen || conferences.length === 0) {
+      return;
+    }
+
+    const storedConferenceId = readActiveConferenceId();
+    const matchingConference = conferences.find(
+      (conference) => String(conference.id) === String(storedConferenceId)
+    );
+    const targetConference = matchingConference || conferences[0];
+
+    if (targetConference?.id) {
+      navigate(`/conference/${targetConference.id}`, { replace: true });
+    }
+  }, [conferences, loading, navigate, shouldAutoOpen]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -88,6 +121,7 @@ const ConferencePage = () => {
     setOpenModal(false);
     setEditing(null);
     setForm(initialForm);
+    navigate("/conference", { replace: true });
   };
 
   const handleSubmit = async (e) => {
@@ -98,8 +132,10 @@ const ConferencePage = () => {
 
       if (editing) {
         await updateConference(editing.id, form, token);
+        writeActiveConferenceId(editing.id);
       } else {
-        await createConference(form, token);
+        const createdConference = await createConference(form, token);
+        writeActiveConferenceId(createdConference?.id);
       }
 
       closeModal();
@@ -117,6 +153,12 @@ const ConferencePage = () => {
 
     try {
       await deleteConference(id, token);
+      const activeConferenceId = readActiveConferenceId();
+
+      if (String(activeConferenceId) === String(id)) {
+        clearActiveConferenceId();
+      }
+
       await loadConferences();
     } catch (error) {
       alert(error.message);
@@ -124,6 +166,7 @@ const ConferencePage = () => {
   };
 
   const handleOpenConference = (conferenceId) => {
+    writeActiveConferenceId(conferenceId);
     navigate(`/conference/${conferenceId}`);
   };
 

@@ -104,11 +104,11 @@ export default function ConferencePage() {
     const targetConference =
       matchingConference || conferences[0];
 
-    if (targetConference?.id) {
-      navigate(`/conference/${targetConference.id}`, {
-        replace: true,
-      });
-    }
+    // if (targetConference?.id) {
+    //   navigate(`/conference/${targetConference.id}`, {
+    //     replace: true,
+    //   });
+    // }
   }, [
     conferences,
     loading,

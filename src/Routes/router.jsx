@@ -104,7 +104,7 @@ const router = createBrowserRouter([
                         element: <ConferencePage />,
                     }, 
                     {
-                        path: "restore",
+                        path: "restore/",
                         element: <RestoreAndDeleteLayout />,
                         children: [
                             {

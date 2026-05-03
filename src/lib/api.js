@@ -594,4 +594,51 @@ export const payConferenceRegistration = async (
 
   return json;
 };
+
+//
+// Restore / Hard Delete APIs
+//
+export async function getRestoreItems(
+  endpoint,
+  token,
+  page = 1
+) {
+  return apiRequest(`${endpoint}?page=${page}`, {
+    method: "GET",
+    token,
+    csrf: true,
+  });
+}
+
+export async function restoreItem(
+  endpoint,
+  id,
+  token
+) {
+  return apiRequest(
+    `${endpoint}${id}/restore/`,
+    {
+      method: "POST",
+      token,
+      csrf: true,
+    }
+  );
+}
+
+export async function hardDeleteItem(
+  endpoint,
+  id,
+  token
+) {
+  return apiRequest(
+    `${endpoint}${id}/hard_delete/`,
+    {
+      method: "DELETE",
+      token,
+      csrf: true,
+    }
+  );
+}
+
 export { apiRequest };
+

@@ -51,6 +51,8 @@ import VideoSessions from "../pages/VideoSessions";
 import RegisterComponent from "../pages/register/RegisterComponent";
 import ConferenceRegistrationDashboard from "../pages/register/ConferenceRegistrationDashboard";
 import RegistrationFeesComponent from "../pages/RegistrationFeesComponent";
+import RestoreAndDeleteLayout from "../layout/RestoreAndDeleteLayout";
+import RestoreTable from "../pages/RestoreTable";
 
 const router = createBrowserRouter([
     {
@@ -100,6 +102,101 @@ const router = createBrowserRouter([
                     {
                         path: "conference",
                         element: <ConferencePage />,
+                    }, 
+                    {
+                        path: "restore",
+                        element: <RestoreAndDeleteLayout />,
+                        children: [
+                            {
+                                index: true,
+                                element: <Navigate to="conference" replace />,
+                            },
+                            {
+                                path: "conference",
+                                element: (
+                                    <RestoreTable
+                                        title="Conference Restore"
+                                        endpoint="/api/v1/conference-restore/"
+                                        columns={[
+                                            { key: "title", label: "Title" },
+                                            { key: "status", label: "Status" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                            {
+                                path: "event",
+                                element: (
+                                    <RestoreTable
+                                        title="Event Restore"
+                                        endpoint="/api/v1/event-restore/"
+                                        columns={[
+                                            { key: "title", label: "Title" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                            {
+                                path: "paper",
+                                element: (
+                                    <RestoreTable
+                                        title="Paper Restore"
+                                        endpoint="/api/v1/paper-restore/"
+                                        columns={[
+                                            { key: "title", label: "Title" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                            {
+                                path: "review",
+                                element: (
+                                    <RestoreTable
+                                        title="Review Restore"
+                                        endpoint="/api/v1/review-restore/"
+                                        columns={[
+                                            { key: "id", label: "ID" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                            {
+                                path: "reviewer",
+                                element: (
+                                    <RestoreTable
+                                        title="Reviewer Restore"
+                                        endpoint="/api/v1/reviewer-restore/"
+                                        columns={[
+                                            { key: "full_name", label: "Name" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                            {
+                                path: "session",
+                                element: (
+                                    <RestoreTable
+                                        title="Session Restore"
+                                        endpoint="/api/v1/session-restore/"
+                                        columns={[
+                                            { key: "title", label: "Title" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                            {
+                                path: "track",
+                                element: (
+                                    <RestoreTable
+                                        title="Track Restore"
+                                        endpoint="/api/v1/track-restore/"
+                                        columns={[
+                                            { key: "name", label: "Name" },
+                                        ]}
+                                    />
+                                ),
+                            },
+                        ],
                     },
 
                     // conference details

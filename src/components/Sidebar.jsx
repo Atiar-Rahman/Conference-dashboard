@@ -28,6 +28,7 @@ const items = [
     to: `/conference/${conferenceId}`,
     icon: CalendarRange,
   },
+  { label: "Restore and Delete", to: "/restore", icon: Users },
 ];
 
 export default function Sidebar() {

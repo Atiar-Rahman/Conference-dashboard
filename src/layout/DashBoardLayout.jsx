@@ -81,13 +81,20 @@ const DashboardLayout = () => {
                 subtitle: "Manage conferences",
             };
         }
-
-        if (path.startsWith("/conference/")) {
+        if (path.startsWith("/restore")) {
             return {
-                title: "Conference",
-                subtitle: "Manage conference content",
+                title: "Restore and delete",
+                subtitle: "Manage conference and all manage",
             };
         }
+
+
+        // if (path.startsWith("/conference/")) {
+        //     return {
+        //         title: "Conference",
+        //         subtitle: "Manage conference content",
+        //     };
+        // }
 
         return {
             title: "Dashboard",

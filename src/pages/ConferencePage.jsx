@@ -9,8 +9,9 @@ import {
   Circle,
 } from "lucide-react";
 
-import { readStoredAuth } from "../lib/authStorage";
 
+
+import { readStoredAuth } from "../lib/authStorage";
 import {
   createConference,
   deleteConference,
@@ -28,7 +29,7 @@ const initialForm = {
   is_published: false,
 };
 
-export default function ConferencePage() {
+const ConferencePage = () => {
   const navigate = useNavigate();
   const token = readStoredAuth()?.access;
 
@@ -39,30 +40,24 @@ export default function ConferencePage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(initialForm);
 
-  // LOAD DATA
   const loadConferences = async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       const data = await getConferences(token);
-      setConferences(data?.results || data || []);
+      setConferences(data.results || data || []);
     } catch (error) {
-      console.error(error);
-      alert(error?.message || "Failed to load conferences");
+      console.log(error);
+      alert(error.message);
     } finally {
       setLoading(false);
     }
   };
+  console.log(conferences)
 
   useEffect(() => {
     loadConferences();
-  }, [token]);
+  }, []);
 
-  // FORM CHANGE
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -72,17 +67,14 @@ export default function ConferencePage() {
     }));
   };
 
-  // CREATE
   const openCreate = () => {
     setEditing(null);
     setForm(initialForm);
     setOpenModal(true);
   };
 
-  // EDIT
   const openEdit = (conference) => {
     setEditing(conference);
-
     setForm({
       name: conference.name || "",
       short_name: conference.short_name || "",
@@ -92,18 +84,15 @@ export default function ConferencePage() {
       description: conference.description || "",
       is_published: conference.is_published || false,
     });
-
     setOpenModal(true);
   };
 
-  // CLOSE
   const closeModal = () => {
     setOpenModal(false);
     setEditing(null);
     setForm(initialForm);
   };
 
-  // SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -116,17 +105,15 @@ export default function ConferencePage() {
         await createConference(form, token);
       }
 
-      await loadConferences();
       closeModal();
+      await loadConferences();
     } catch (error) {
-      console.error(error);
-      alert(error?.message || "Failed to save conference");
+      alert(error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // DELETE
   const handleDelete = async (id) => {
     const ok = window.confirm("Delete this conference?");
     if (!ok) return;
@@ -135,21 +122,24 @@ export default function ConferencePage() {
       await deleteConference(id, token);
       await loadConferences();
     } catch (error) {
-      console.error(error);
-      alert(error?.message || "Failed to delete conference");
+      alert(error.message);
     }
   };
 
-  // OPEN DETAILS PAGE
-  const handleOpenConference = (id) => {
-    navigate(`/conference/${id}`);
+  const handleOpenConference = (conferenceId) => {
+    navigate(`/conference/${conferenceId}`);
   };
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
+      {/* top */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Conference</h1>
+        <div>
+          <h1 className="text-3xl font-semibold">Conference</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Create / Update / Delete conferences
+          </p>
+        </div>
 
         <button
           onClick={openCreate}
@@ -160,7 +150,7 @@ export default function ConferencePage() {
         </button>
       </div>
 
-      {/* LIST */}
+      {/* list */}
       <div className="rounded-[30px] bg-white p-6 shadow-panel">
         {loading ? (
           <p>Loading...</p>
@@ -172,33 +162,49 @@ export default function ConferencePage() {
               <div
                 key={item.id}
                 onClick={() => handleOpenConference(item.id)}
-                className="cursor-pointer rounded-3xl border p-5 transition hover:border-black hover:shadow-md"
+                className="cursor-pointer rounded-3xl border border-slate-200 p-5 transition hover:border-black hover:shadow-md"
               >
-                <div className="flex justify-between">
-                  <div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-2">
                     <h3 className="text-xl font-semibold">{item.name}</h3>
-                    <p className="text-sm text-slate-500">{item.location}</p>
+
+                    <p className="text-sm text-slate-500">
+                      {item.location}
+                    </p>
+
                     <p className="text-sm text-slate-500">
                       {item.start_date} → {item.end_date}
                     </p>
 
                     {item.is_published ? (
-                      <span className="text-green-600 flex items-center gap-1">
-                        <CheckCircle2 size={16} /> Published
+                      <span className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                        <CheckCircle2 size={16} />
+                        Published
                       </span>
                     ) : (
-                      <span className="text-orange-600 flex items-center gap-1">
-                        <Circle size={16} /> Draft
+                      <span className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-700">
+                        <Circle size={16} />
+                        Draft
                       </span>
                     )}
                   </div>
 
-                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => openEdit(item)}>
+                  {/* prevent bubbling */}
+                  <div
+                    className="flex gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="rounded-2xl bg-slate-100 p-3 hover:bg-slate-200"
+                    >
                       <Pencil size={18} />
                     </button>
 
-                    <button onClick={() => handleDelete(item.id)}>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="rounded-2xl bg-red-100 p-3 text-red-600 hover:bg-red-200"
+                    >
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -209,38 +215,96 @@ export default function ConferencePage() {
         )}
       </div>
 
-      {/* MODAL */}
+      {/* modal */}
       {openModal && (
-        <div className="fixed inset-0 grid place-items-center bg-black/40">
-          <div className="w-full max-w-2xl bg-white p-6 rounded-2xl">
-            <div className="flex justify-between">
-              <h2 className="text-xl font-semibold">
-                {editing ? "Update" : "Create"} Conference
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl rounded-[30px] bg-white p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl font-semibold">
+                {editing ? "Update Conference" : "Create Conference"}
               </h2>
+
               <button onClick={closeModal}>
                 <X />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-              <input name="name" value={form.name} onChange={handleChange} placeholder="Name" className="border p-2 w-full" />
-              <input name="short_name" value={form.short_name} onChange={handleChange} placeholder="Short Name" className="border p-2 w-full" />
-              <input name="location" value={form.location} onChange={handleChange} placeholder="Location" className="border p-2 w-full" />
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Name"
+                required
+                className="w-full rounded-2xl border p-4"
+              />
 
-              <div className="flex gap-2">
-                <input type="date" name="start_date" value={form.start_date} onChange={handleChange} className="border p-2 w-full" />
-                <input type="date" name="end_date" value={form.end_date} onChange={handleChange} className="border p-2 w-full" />
+              <input
+                name="short_name"
+                value={form.short_name}
+                onChange={handleChange}
+                placeholder="Short Name"
+                required
+                className="w-full rounded-2xl border p-4"
+              />
+
+              <input
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                placeholder="Location"
+                required
+                className="w-full rounded-2xl border p-4"
+              />
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <input
+                  type="date"
+                  name="start_date"
+                  value={form.start_date}
+                  onChange={handleChange}
+                  required
+                  className="rounded-2xl border p-4"
+                />
+
+                <input
+                  type="date"
+                  name="end_date"
+                  value={form.end_date}
+                  onChange={handleChange}
+                  required
+                  className="rounded-2xl border p-4"
+                />
               </div>
 
-              <textarea name="description" value={form.description} onChange={handleChange} className="border p-2 w-full" />
+              <textarea
+                rows={5}
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Description"
+                className="w-full rounded-2xl border p-4"
+              />
 
-              <label className="flex gap-2">
-                <input type="checkbox" name="is_published" checked={form.is_published} onChange={handleChange} />
+              <label className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  name="is_published"
+                  checked={form.is_published}
+                  onChange={handleChange}
+                />
                 Published
               </label>
 
-              <button className="bg-black text-white w-full p-3 rounded-xl">
-                {saving ? "Saving..." : "Save"}
+              <button
+                disabled={saving}
+                className="w-full rounded-2xl bg-black py-4 font-medium text-white"
+              >
+                {saving
+                  ? "Saving..."
+                  : editing
+                    ? "Update Conference"
+                    : "Create Conference"}
               </button>
             </form>
           </div>
@@ -248,4 +312,6 @@ export default function ConferencePage() {
       )}
     </div>
   );
-}
+};
+
+export default ConferencePage;

@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 
 import { readStoredAuth } from "../lib/authStorage";
-import { writeActiveConferenceId } from "../lib/activeConference";
 import { getConference } from "../lib/api";
 
 const sections = [

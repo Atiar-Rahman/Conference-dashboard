@@ -10,11 +10,7 @@ import {
 } from "lucide-react";
 
 import { readStoredAuth } from "../lib/authStorage";
-import {
-  clearActiveConferenceId,
-  readActiveConferenceId,
-  writeActiveConferenceId,
-} from "../lib/activeConference";
+
 import {
   createConference,
   deleteConference,

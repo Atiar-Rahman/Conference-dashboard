@@ -7,8 +7,8 @@ import {
   Users,
   Mail,
   Book,
-  BookA,
-  Video
+  Video,
+  Trash2,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -26,7 +26,7 @@ const items = [
     to: "/conference",
     icon: CalendarRange,
   },
-  { label: "Restore and Delete", to: "/restore", icon: Users },
+  { label: "Restore and Delete", to: "/restore", icon: Trash2 }
 ];
 
 export default function Sidebar() {

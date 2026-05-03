@@ -43,7 +43,7 @@ function getCsrfToken() {
 }
 
 async function refreshAccessToken(refresh) {
-  const response = await fetch(`${requestBaseUrl}/auth/jwt/refresh/`, {
+  const response = await fetch(`${requestBaseUrl}api/v1/auth/jwt/refresh/`, {
     method: "POST",
     credentials: defaultCredentialsMode,
     headers: {
@@ -222,21 +222,21 @@ export function getApiDisplayUrl(path) {
 }
 
 export async function loginUser(credentials) {
-  return apiRequest("/auth/jwt/create/", {
+  return apiRequest("api/v1/auth/jwt/create/", {
     method: "POST",
     body: JSON.stringify(credentials),
   });
 }
 
 export async function getCurrentUser(token) {
-  return apiRequest("/auth/users/me/", {
+  return apiRequest("api/v1/auth/users/me/", {
     method: "GET",
     token,
   });
 }
 
 export async function getUsers(token, page = 1) {
-  return apiRequest(`/auth/users/?page=${page}`, {
+  return apiRequest(`api/v1/auth/users/?page=${page}`, {
     method: "GET",
     token,
   });
@@ -244,7 +244,7 @@ export async function getUsers(token, page = 1) {
 
 export async function createUser(payload, token) {
   try {
-    return await apiRequest("/auth/users/", {
+    return await apiRequest("api/v1/auth/users/", {
       method: "POST",
       token,
       body: JSON.stringify(payload),
@@ -274,7 +274,7 @@ export async function createUser(payload, token) {
       throw error;
     }
 
-    return apiRequest("/auth/users/", {
+    return apiRequest("api/v1/auth/users/", {
       method: "POST",
       token,
       body: JSON.stringify(retryPayload),
@@ -284,7 +284,7 @@ export async function createUser(payload, token) {
 }
 
 export async function updateUser({ id, payload, token, isCurrentUser }) {
-  const path = isCurrentUser ? "/auth/users/me/" : `/auth/users/${id}/`;
+  const path = isCurrentUser ? "api/v1/auth/users/me/" : `api/v1/auth/users/${id}/`;
 
   try {
     return await apiRequest(path, {
@@ -306,7 +306,7 @@ export async function updateUser({ id, payload, token, isCurrentUser }) {
 }
 
 export async function deleteUser(id, token) {
-  return apiRequest(`/auth/users/${id}/`, {
+  return apiRequest(`api/v1/auth/users/${id}/`, {
     method: "DELETE",
     token,
     csrf: true,

@@ -24,7 +24,7 @@ const items = [
   { label: "Users", to: "/users", icon: Users },
   {
     label: "Conference",
-    to: "/conference",
+    to: "/conference/",
     icon: CalendarRange,
   },
   { label: "Restore and Delete", to: "/restore", icon: Trash2 }

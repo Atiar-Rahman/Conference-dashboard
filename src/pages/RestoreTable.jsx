@@ -75,6 +75,7 @@ export default function RestoreTable({
     };
 
     const handleDelete = async (id) => {
+       
         if (
             !window.confirm(
                 "Permanently delete this item?"
@@ -83,6 +84,7 @@ export default function RestoreTable({
             return;
 
         try {
+            console.log(id)
             setActionLoading(`delete-${id}`);
 
             await hardDeleteItem(endpoint, id, token);

@@ -625,15 +625,11 @@ export async function restoreItem(
   );
 }
 
-export async function hardDeleteItem(
-  endpoint,
-  id,
-  token
-) {
+export async function hardDeleteItem(endpoint, id, token) {
   return apiRequest(
     `${endpoint}${id}/hard_delete/`,
     {
-      method: "DELETE",
+      method: "GET",
       token,
       csrf: true,
     }
